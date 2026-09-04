@@ -1,0 +1,44 @@
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: file-service
+          uri: lb://file-service
+          predicates:
+            - Path=/api/v1/files/**,/api/v1/images/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/v1/payment/**
+        - id: core-service
+          uri: lb://core-service
+          predicates:
+            - Path=/api/v1/**
+
+myshop:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-phase0-secret-key-32chars!!}

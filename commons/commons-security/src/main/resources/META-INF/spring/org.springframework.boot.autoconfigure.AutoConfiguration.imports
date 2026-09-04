@@ -1,0 +1,2 @@
+com.myshop.commons.security.FeignClientAutoConfiguration
+com.myshop.commons.security.ResourceServerSecurityAutoConfiguration

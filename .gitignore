@@ -1,0 +1,14 @@
+target/
+**/target/
+.idea/
+*.iml
+*.class
+.classpath
+.project
+.settings/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+myshop-configs/.git/

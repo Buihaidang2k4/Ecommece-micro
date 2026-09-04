@@ -1,0 +1,69 @@
+services:
+  backend:
+    build:
+      context: .
+    container_name: myshop-api-backend
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    networks:
+      - app-network
+    env_file:
+      - .env
+      - .env.${SPRING_PROFILES_ACTIVE}
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: Asia/Ho_Chi_Minh
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    command: --explicit_defaults_for_timestamp=1
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DBMS_PASSWORD}
+      MYSQL_DATABASE: ${DBMS_NAME}
+    ports:
+      - "${DBMS_PORT}:${DBMS_PORT}"
+    networks:
+      - app-network
+    volumes:
+      - db_mysql:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -uroot -p${DBMS_PASSWORD} -h 127.0.0.1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: always
+
+  redis-cache:
+    image: redis:latest
+    container_name: redis-cache
+    ports:
+      - "${SPRING_DATA_REDIS_PORT}:${SPRING_DATA_REDIS_PORT}"
+    networks:
+      - app-network
+    volumes:
+      - db_redis:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+volumes:
+  db_mysql:
+  db_redis:
+
+networks:
+  app-network:
+    driver: bridge
+
+
+
