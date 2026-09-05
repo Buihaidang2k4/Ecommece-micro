@@ -25,5 +25,8 @@ spring:
         spring.json.value.default.type: com.myshop.commons.events.UserRegisteredEvent
 
 myshop:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-phase0-secret-key-32chars!!}
   kafka:
     user-registered-topic: myshop.user.registered

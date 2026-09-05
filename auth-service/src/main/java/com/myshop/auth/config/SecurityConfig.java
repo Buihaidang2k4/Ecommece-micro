@@ -1,5 +1,8 @@
 package com.myshop.auth.config;
 
+import com.myshop.auth.constant.ApiPath;
+import com.myshop.commons.constants.JwtConstants;
+import com.myshop.commons.constants.SecurityConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +26,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final String ACCESS_TOKEN_COOKIE = "access_token";
-
     private final CustomJwtDecoder customJwtDecoder;
 
     @Bean
@@ -35,18 +36,18 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/auth/**",
-                                "/api/v1/users/registration",
-                                "/actuator/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
+                                ApiPath.AUTH_ALL,
+                                ApiPath.USER_REGISTRATION,
+                                SecurityConstants.ACTUATOR_ALL,
+                                SecurityConstants.SWAGGER_UI_ALL,
+                                SecurityConstants.V3_API_DOCS_ALL,
+                                SecurityConstants.SWAGGER_RESOURCES_ALL,
+                                SecurityConstants.WEBJARS_ALL
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth
-                        .bearerTokenResolver(new CookieBearerTokenResolver(ACCESS_TOKEN_COOKIE))
+                        .bearerTokenResolver(new CookieBearerTokenResolver(SecurityConstants.ACCESS_COOKIE))
                         .jwt(jwt -> jwt
                                 .decoder(customJwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
@@ -61,7 +62,7 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             Collection<GrantedAuthority> authorities = new ArrayList<>();
 
-            Object permissionsClaim = jwt.getClaim("permissions");
+            Object permissionsClaim = jwt.getClaim(JwtConstants.CLAIM_PERMISSIONS);
             if (permissionsClaim instanceof Collection<?> permissions && !permissions.isEmpty()) {
                 authorities.addAll(permissions.stream()
                         .map(Object::toString)
@@ -71,7 +72,7 @@ public class SecurityConfig {
                 return authorities;
             }
 
-            String scope = jwt.getClaimAsString("scope");
+            String scope = jwt.getClaimAsString(JwtConstants.CLAIM_SCOPE);
             if (scope != null && !scope.isBlank()) {
                 authorities.addAll(Arrays.stream(scope.split(" "))
                         .filter(s -> !s.isBlank())

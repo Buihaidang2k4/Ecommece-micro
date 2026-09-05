@@ -1,5 +1,6 @@
 package com.myshop.gateway.config;
 
+import com.myshop.gateway.constant.ApiPath;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,12 +29,14 @@ public class GatewaySecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(
-                                "/actuator/**",
-                                "/api/v1/auth/**",
-                                "/api/v1/files/**",
-                                "/api/v1/images/**",
-                                "/api/v1/products/**",
-                                "/api/v1/categories/**"
+                                ApiPath.ACTUATOR_ALL,
+                                ApiPath.AUTH_ALL,
+                                ApiPath.USER_REGISTRATION,
+                                ApiPath.FILES_ALL,
+                                ApiPath.IMAGES_ALL,
+                                ApiPath.PRODUCTS_ALL,
+                                ApiPath.CATEGORIES_ALL,
+                                ApiPath.PAYMENT_VN_PAY_CALLBACK
                         ).permitAll()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))

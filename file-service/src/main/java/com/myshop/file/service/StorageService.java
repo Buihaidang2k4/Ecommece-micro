@@ -41,6 +41,7 @@ public class StorageService {
     }
 
     public String presignGet(String objectKey) throws Exception {
+        ensureBucket();
         return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                 .bucket(bucket)
                 .object(objectKey)

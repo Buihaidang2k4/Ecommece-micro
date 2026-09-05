@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: payment-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8889}
+
+server:
+  port: 8096
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8762/eureka/}
+
+api:
+  prefix: /api/v1
+
+myshop:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-phase0-secret-key-32chars!!}
+  kafka:
+    payment-succeeded-topic: myshop.payment.succeeded
+    payment-failed-topic: myshop.payment.failed
+    payment-expired-topic: myshop.payment.expired
+  frontend:
+    order-confirmed-base-url: ${FRONTEND_ORDER_CONFIRMED_URL:http://localhost:3000/cart/checkout/order-confirmed/}

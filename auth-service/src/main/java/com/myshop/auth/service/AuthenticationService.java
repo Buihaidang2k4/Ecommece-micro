@@ -11,12 +11,18 @@ import com.myshop.auth.dto.response.IntrospectResponse;
 import com.myshop.auth.entity.Role;
 import com.myshop.auth.entity.User;
 import com.myshop.auth.entity.UserRole;
-import com.myshop.auth.repository.PermissionRepository;
+import com.myshop.auth.mapper.PermissionMapper;
+import com.myshop.auth.mapper.UserQueryMapper;
 import com.myshop.auth.repository.RoleRepository;
 import com.myshop.auth.repository.UserRepository;
 import com.myshop.auth.repository.UserRoleRepository;
 import com.myshop.commons.exception.AppException;
+import com.myshop.commons.constants.JwtConstants;
+import com.myshop.commons.constants.RoleConstants;
 import com.myshop.commons.exception.ErrorCode;
+import com.myshop.commons.exception.BusinessException;
+import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.commons.exception.MessageHandlerUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -50,13 +56,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AuthenticationService {
 
-    public static final String ACCESS_COOKIE = "access_token";
-    public static final String REFRESH_COOKIE = "refresh_token";
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
-    private final PermissionRepository permissionRepository;
+    private final PermissionMapper permissionMapper;
+    private final UserQueryMapper userQueryMapper;
     private final PasswordEncoder passwordEncoder;
     private final TokenBlacklistService blacklistService;
     private final UserRegisteredEventPublisher userRegisteredEventPublisher;
@@ -76,13 +80,22 @@ public class AuthenticationService {
     @Transactional
     public AuthenticationResponse authenticate(LoginRequest request) throws ParseException {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(ErrorCode.INVALID_CREDENTIALS));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.INVALID_CREDENTIALS,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.INVALID_CREDENTIALS)
+                ));
 
         if (!user.isEnabled()) {
-            throw new AppException(ErrorCode.USER_ALREADY_LOCKED);
+            throw new BusinessException(
+                    ErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+            );
         }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new AppException(ErrorCode.PASSWORD_NOT_MATCHES);
+            throw new BusinessException(
+                    ErrorCode.PASSWORD_NOT_MATCHES,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.PASSWORD_NOT_MATCHES)
+            );
         }
 
         return issueTokens(user);
@@ -99,7 +112,10 @@ public class AuthenticationService {
 
         User user = userRepository.findByEmail(email).orElseGet(() -> createGoogleUser(email));
         if (!user.isEnabled()) {
-            throw new AppException(ErrorCode.USER_ALREADY_LOCKED);
+            throw new BusinessException(
+                    ErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+            );
         }
         return issueTokens(user);
     }
@@ -109,9 +125,15 @@ public class AuthenticationService {
         SignedJWT signedJWT = verifyToken(token, true);
         String email = signedJWT.getJWTClaimsSet().getSubject();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                ));
         if (!user.isEnabled()) {
-            throw new AppException(ErrorCode.USER_ALREADY_LOCKED);
+            throw new BusinessException(
+                    ErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+            );
         }
         return generateAccessToken(user);
     }
@@ -204,8 +226,11 @@ public class AuthenticationService {
     }
 
     private User createGoogleUser(String email) {
-        Role userRole = roleRepository.findByRoleName("USER")
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "USER role not found"));
+        Role userRole = roleRepository.findByRoleName(RoleConstants.USER)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.RESOURCE_NOT_FOUND,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ROLE_NOT_FOUND)
+                ));
 
         User user = User.builder()
                 .email(email)
@@ -236,7 +261,7 @@ public class AuthenticationService {
         JWSVerifier verifier = new MACVerifier(tokenKey.getBytes(StandardCharsets.UTF_8));
         boolean verified = signedJWT.verify(verifier);
         Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-        Object typeClaim = signedJWT.getJWTClaimsSet().getClaim("type");
+        Object typeClaim = signedJWT.getJWTClaimsSet().getClaim(JwtConstants.CLAIM_TYPE);
         String type = typeClaim == null ? null : typeClaim.toString();
 
         if (!verified) {
@@ -245,63 +270,57 @@ public class AuthenticationService {
         if (expiryTime == null || expiryTime.before(new Date())) {
             throw new AppException(ErrorCode.TOKEN_EXPIRED);
         }
-        if (isRefresh && !"refresh_token".equals(type)) {
+        if (isRefresh && !JwtConstants.TYPE_REFRESH.equals(type)) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        if (!isRefresh && !"access_token".equals(type)) {
+        if (!isRefresh && !JwtConstants.TYPE_ACCESS.equals(type)) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
         return signedJWT;
     }
 
     private String generateAccessToken(User user) {
-        return buildToken(user, Duration.ofMillis(accessTokenDurationMs), "access_token");
+        return buildToken(user, Duration.ofMillis(accessTokenDurationMs), JwtConstants.TYPE_ACCESS);
     }
 
     private String generateRefreshToken(User user) {
-        return buildToken(user, Duration.ofMillis(refreshTokenDurationMs), "refresh_token");
+        return buildToken(user, Duration.ofMillis(refreshTokenDurationMs), JwtConstants.TYPE_REFRESH);
     }
 
     private String buildToken(User user, Duration duration, String type) {
         try {
-            List<String> permissions = permissionRepository.findPermissionCodesByUserId(user.getId());
-            List<Role> roles = loadRoles(user.getId());
+            List<String> permissions = permissionMapper.findPermissionCodesByUserId(user.getId());
+            List<String> roleNames = userQueryMapper.findRoleNamesByUserId(user.getId());
 
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                     .subject(user.getEmail())
-                    .issuer("myshop-auth-service")
+                    .issuer(JwtConstants.ISSUER)
                     .issueTime(new Date())
                     .expirationTime(new Date(Instant.now().plus(duration).toEpochMilli()))
                     .jwtID(UUID.randomUUID().toString())
-                    .claim("permissions", permissions)
-                    .claim("scope", buildScope(roles))
-                    .claim("type", type)
+                    .claim(JwtConstants.CLAIM_USER_ID, user.getId())
+                    .claim(JwtConstants.CLAIM_PERMISSIONS, permissions)
+                    .claim(JwtConstants.CLAIM_SCOPE, buildScope(roleNames))
+                    .claim(JwtConstants.CLAIM_TYPE, type)
                     .build();
 
             SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);
             signedJWT.sign(new MACSigner(tokenKey.getBytes(StandardCharsets.UTF_8)));
             return signedJWT.serialize();
         } catch (JOSEException e) {
-            throw new AppException(ErrorCode.INTERNAL_ERROR, "Failed to create token");
+            throw new BusinessException(
+                    ErrorCode.INTERNAL_ERROR,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.FAILED_CREATE_TOKEN)
+            );
         }
     }
 
-    private List<Role> loadRoles(Long userId) {
-        List<Long> roleIds = userRoleRepository.findByUserId(userId).stream()
-                .map(UserRole::getRoleId)
-                .toList();
-        if (roleIds.isEmpty()) {
-            return List.of();
-        }
-        return roleRepository.findAllById(roleIds);
-    }
-
-    private String buildScope(List<Role> roles) {
-        if (CollectionUtils.isEmpty(roles)) {
+    private String buildScope(List<String> roleNames) {
+        if (CollectionUtils.isEmpty(roleNames)) {
             return "";
         }
-        return roles.stream()
-                .map(role -> "ROLE_" + role.getRoleName())
+        return roleNames.stream()
+                .map(roleName -> JwtConstants.ROLE_PREFIX + roleName)
                 .collect(Collectors.joining(" "));
     }
 }

@@ -1,5 +1,6 @@
 package com.myshop.auth.controller;
 
+import com.myshop.auth.constant.ApiPath;
 import com.myshop.auth.dto.request.ForgotPasswordRequest;
 import com.myshop.auth.dto.request.GoogleTokenRequest;
 import com.myshop.auth.dto.request.LoginRequest;
@@ -8,6 +9,7 @@ import com.myshop.auth.dto.response.AuthenticationResponse;
 import com.myshop.auth.dto.response.IntrospectResponse;
 import com.myshop.auth.service.AuthenticationService;
 import com.myshop.auth.service.PasswordResetOtpService;
+import com.myshop.commons.constants.SecurityConstants;
 import com.myshop.commons.dto.ApiResponse;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +28,7 @@ import java.security.GeneralSecurityException;
 import java.text.ParseException;
 
 @RestController
-@RequestMapping("${api.prefix}/auth")
+@RequestMapping(ApiPath.AUTH)
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
@@ -57,7 +59,7 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<Object>> refresh(HttpServletRequest request, HttpServletResponse response)
             throws ParseException, JOSEException {
-        String refreshToken = authenticationService.getTokenFromCookie(request, AuthenticationService.REFRESH_COOKIE);
+        String refreshToken = authenticationService.getTokenFromCookie(request, SecurityConstants.REFRESH_COOKIE);
         if (refreshToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.of(HttpStatus.UNAUTHORIZED.value(), "No refresh token found", null));
@@ -65,7 +67,7 @@ public class AuthController {
         String newAccessToken = authenticationService.refreshToken(refreshToken);
         ResponseCookie accessCookie = authenticationService.buildCookie(
                 newAccessToken,
-                AuthenticationService.ACCESS_COOKIE,
+                SecurityConstants.ACCESS_COOKIE,
                 authenticationService.accessCookieMaxAge()
         );
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -75,20 +77,20 @@ public class AuthController {
     @PostMapping("/introspect")
     public ApiResponse<IntrospectResponse> introspect(HttpServletRequest request)
             throws ParseException, JOSEException {
-        String accessToken = authenticationService.getTokenFromCookie(request, AuthenticationService.ACCESS_COOKIE);
+        String accessToken = authenticationService.getTokenFromCookie(request, SecurityConstants.ACCESS_COOKIE);
         IntrospectResponse result = authenticationService.introspect(accessToken);
         return ApiResponse.of(200, "Introspect successful", result);
     }
 
     @PostMapping("/logout")
     public ApiResponse<Object> logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = authenticationService.getTokenFromCookie(request, AuthenticationService.REFRESH_COOKIE);
+        String refreshToken = authenticationService.getTokenFromCookie(request, SecurityConstants.REFRESH_COOKIE);
         authenticationService.logout(refreshToken);
 
         response.addHeader(HttpHeaders.SET_COOKIE,
-                authenticationService.clearCookie(AuthenticationService.ACCESS_COOKIE).toString());
+                authenticationService.clearCookie(SecurityConstants.ACCESS_COOKIE).toString());
         response.addHeader(HttpHeaders.SET_COOKIE,
-                authenticationService.clearCookie(AuthenticationService.REFRESH_COOKIE).toString());
+                authenticationService.clearCookie(SecurityConstants.REFRESH_COOKIE).toString());
 
         return ApiResponse.of(200, "Logout successful", null);
     }
@@ -108,12 +110,12 @@ public class AuthController {
     private void addTokenCookies(HttpServletResponse response, AuthenticationResponse tokens) {
         ResponseCookie accessCookie = authenticationService.buildCookie(
                 tokens.getAccessToken(),
-                AuthenticationService.ACCESS_COOKIE,
+                SecurityConstants.ACCESS_COOKIE,
                 authenticationService.accessCookieMaxAge()
         );
         ResponseCookie refreshCookie = authenticationService.buildCookie(
                 tokens.getRefreshToken(),
-                AuthenticationService.REFRESH_COOKIE,
+                SecurityConstants.REFRESH_COOKIE,
                 authenticationService.refreshCookieMaxAge()
         );
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());

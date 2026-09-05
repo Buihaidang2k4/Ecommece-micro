@@ -3,17 +3,21 @@ package com.myshop.auth.service;
 import com.myshop.auth.dto.request.UpdateUserRolesRequest;
 import com.myshop.auth.dto.request.UserRegistrationRequest;
 import com.myshop.auth.dto.response.RoleResponse;
+import com.myshop.auth.dto.response.UserListRow;
 import com.myshop.auth.dto.response.UserResponse;
 import com.myshop.auth.entity.Role;
 import com.myshop.auth.entity.User;
 import com.myshop.auth.entity.UserRole;
-import com.myshop.auth.repository.PermissionRepository;
-import com.myshop.auth.repository.RolePermissionRepository;
+import com.myshop.auth.mapper.PermissionMapper;
+import com.myshop.auth.mapper.UserQueryMapper;
 import com.myshop.auth.repository.RoleRepository;
 import com.myshop.auth.repository.UserRepository;
 import com.myshop.auth.repository.UserRoleRepository;
-import com.myshop.commons.exception.AppException;
+import com.myshop.commons.constants.RoleConstants;
+import com.myshop.commons.exception.BusinessException;
+import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;
+import com.myshop.commons.exception.MessageHandlerUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,19 +37,25 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
-    private final PermissionRepository permissionRepository;
-    private final RolePermissionRepository rolePermissionRepository;
+    private final PermissionMapper permissionMapper;
+    private final UserQueryMapper userQueryMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRegisteredEventPublisher userRegisteredEventPublisher;
 
     @Transactional
     public UserResponse register(UserRegistrationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new BusinessException(
+                    ErrorCode.USER_EXISTED,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_EXISTED)
+            );
         }
 
-        Role userRole = roleRepository.findByRoleName("USER")
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "USER role not found"));
+        Role userRole = roleRepository.findByRoleName(RoleConstants.USER)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.RESOURCE_NOT_FOUND,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ROLE_NOT_FOUND)
+                ));
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -56,7 +66,10 @@ public class UserService {
         try {
             user = userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new BusinessException(
+                    ErrorCode.USER_EXISTED,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_EXISTED)
+            );
         }
 
         userRoleRepository.save(UserRole.builder()
@@ -72,31 +85,57 @@ public class UserService {
     public UserResponse getMyInfo() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                ));
         return toResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserListRow> listUsers(String email, Boolean enabled, String roleName) {
+        return userQueryMapper.findUsers(email, enabled, roleName);
     }
 
     @Transactional
     public void lockUser(Long userId, String reason) {
         if (reason == null || reason.isBlank()) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR, "Lock reason is required");
+            throw new BusinessException(
+                    ErrorCode.VALIDATION_ERROR,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.LOCK_REASON_REQUIRED)
+            );
         }
         String currentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         User current = userRepository.findByEmail(currentEmail)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                ));
 
         if (userId.equals(current.getId())) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR, "You cannot lock yourself");
+            throw new BusinessException(
+                    ErrorCode.VALIDATION_ERROR,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.CANNOT_LOCK_YOURSELF)
+            );
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                ));
 
-        if (hasAdminRole(user.getId())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "You cannot lock ADMIN");
+        if (userQueryMapper.userHasRole(user.getId(), RoleConstants.ADMIN)) {
+            throw new BusinessException(
+                    ErrorCode.UNAUTHORIZED,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.CANNOT_LOCK_ADMIN)
+            );
         }
         if (!user.isEnabled()) {
-            throw new AppException(ErrorCode.USER_ALREADY_LOCKED);
+            throw new BusinessException(
+                    ErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+            );
         }
 
         user.setEnabled(false);
@@ -108,9 +147,15 @@ public class UserService {
     @Transactional
     public void unlockUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                ));
         if (user.isEnabled()) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR, "User is already unlocked");
+            throw new BusinessException(
+                    ErrorCode.VALIDATION_ERROR,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_UNLOCKED)
+            );
         }
         user.setEnabled(true);
         user.setLockedReason(null);
@@ -121,11 +166,17 @@ public class UserService {
     @Transactional
     public UserResponse updateRoles(Long userId, UpdateUserRolesRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                ));
 
         List<Role> roles = roleRepository.findAllById(request.getRoleIds());
         if (roles.size() != request.getRoleIds().size()) {
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "One or more roles not found");
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_NOT_FOUND,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+            );
         }
 
         userRoleRepository.deleteByUserId(userId);
@@ -138,17 +189,10 @@ public class UserService {
         return toResponse(user);
     }
 
-    private boolean hasAdminRole(Long userId) {
-        return userRoleRepository.findByUserId(userId).stream()
-                .map(UserRole::getRoleId)
-                .map(roleRepository::findById)
-                .flatMap(java.util.Optional::stream)
-                .anyMatch(role -> "ADMIN".equals(role.getRoleName()));
-    }
-
     private UserResponse toResponse(User user) {
-        List<RoleResponse> roles = userRoleRepository.findByUserId(user.getId()).stream()
-                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
+        List<String> roleNames = userQueryMapper.findRoleNamesByUserId(user.getId());
+        List<RoleResponse> roles = roleNames.stream()
+                .map(roleName -> roleRepository.findByRoleName(roleName).orElse(null))
                 .filter(role -> role != null)
                 .map(this::toRoleResponse)
                 .toList();
@@ -164,15 +208,7 @@ public class UserService {
     }
 
     private RoleResponse toRoleResponse(Role role) {
-        List<Long> permissionIds = rolePermissionRepository.findByRoleId(role.getId()).stream()
-                .map(rp -> rp.getPermissionId())
-                .toList();
-        List<String> permissions = permissionIds.isEmpty()
-                ? List.of()
-                : permissionRepository.findAllById(permissionIds).stream()
-                .map(p -> p.getCode())
-                .toList();
-
+        List<String> permissions = permissionMapper.findPermissionCodesByRoleId(role.getId());
         return RoleResponse.builder()
                 .id(role.getId())
                 .roleName(role.getRoleName())

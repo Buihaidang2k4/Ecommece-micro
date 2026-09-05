@@ -3,4 +3,4 @@ spring:
     name: file-service
 
 server:
-  port: 8084
+  port: 8094

@@ -11,4 +11,3 @@ target/
 !.env.example
 *.log
 .DS_Store
-myshop-configs/.git/

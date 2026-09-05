@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myshop.auth.mapper.PermissionMapper">
+
+    <select id="findPermissionCodesByUserId" resultType="string">
+        SELECT DISTINCT p.code
+        FROM permissions p
+                 INNER JOIN role_permissions rp ON rp.permission_id = p.id
+                 INNER JOIN user_roles ur ON ur.role_id = rp.role_id
+        WHERE ur.user_id = #{userId}
+        ORDER BY p.code
+    </select>
+
+    <select id="findPermissionCodesByRoleId" resultType="string">
+        SELECT p.code
+        FROM permissions p
+                 INNER JOIN role_permissions rp ON rp.permission_id = p.id
+        WHERE rp.role_id = #{roleId}
+        ORDER BY p.code
+    </select>
+
+</mapper>

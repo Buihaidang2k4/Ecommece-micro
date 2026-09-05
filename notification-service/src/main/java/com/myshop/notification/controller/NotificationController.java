@@ -1,6 +1,7 @@
 package com.myshop.notification.controller;
 
 import com.myshop.commons.dto.ApiResponse;
+import com.myshop.notification.constant.ApiPath;
 import com.myshop.notification.document.NotificationLog;
 import com.myshop.notification.repository.NotificationLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/notifications")
+@RequestMapping(ApiPath.NOTIFICATIONS)
 @RequiredArgsConstructor
 public class NotificationController {
     private final NotificationLogRepository repository;

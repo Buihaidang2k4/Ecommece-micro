@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myshop.core.mapper.ReportQueryMapper">
+
+    <select id="monthlyRevenue" resultType="com.myshop.core.dto.response.MonthlyRevenueRow">
+        SELECT YEAR(o.order_date)  AS year,
+               MONTH(o.order_date) AS month,
+               SUM(o.total_amount) AS totalRevenue,
+               COUNT(*)            AS orderCount
+        FROM orders o
+        WHERE o.order_status != 'CANCELLED'
+        <if test="year != null">
+            AND YEAR(o.order_date) = #{year}
+        </if>
+        GROUP BY YEAR(o.order_date), MONTH(o.order_date)
+        ORDER BY year, month
+    </select>
+
+    <select id="productRevenue" resultType="com.myshop.core.dto.response.ProductRevenueRow">
+        SELECT oi.product_id   AS productId,
+               oi.product_name AS productName,
+               SUM(oi.price * oi.quantity) AS totalRevenue,
+               SUM(oi.quantity) AS quantitySold
+        FROM order_items oi
+                 INNER JOIN orders o ON o.order_id = oi.order_id
+        WHERE o.order_status != 'CANCELLED'
+        <if test="year != null">
+            AND YEAR(o.order_date) = #{year}
+        </if>
+        <if test="month != null">
+            AND MONTH(o.order_date) = #{month}
+        </if>
+        GROUP BY oi.product_id, oi.product_name
+        ORDER BY totalRevenue DESC
+    </select>
+
+</mapper>

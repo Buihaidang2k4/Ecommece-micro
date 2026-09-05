@@ -1,5 +1,7 @@
 package com.myshop.auth.config;
 
+import com.myshop.auth.constant.ApiPath;
+import com.myshop.commons.constants.SecurityConstants;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -13,13 +15,13 @@ import java.util.List;
 public class CookieBearerTokenResolver implements BearerTokenResolver {
 
     private static final List<String> PUBLIC_PREFIXES = List.of(
-            "/api/v1/auth/",
-            "/api/v1/users/registration",
-            "/actuator/",
-            "/swagger-ui/",
-            "/v3/api-docs",
-            "/swagger-resources/",
-            "/webjars/"
+            ApiPath.AUTH_PREFIX,
+            ApiPath.USER_REGISTRATION,
+            SecurityConstants.ACTUATOR_PREFIX,
+            SecurityConstants.SWAGGER_UI_PREFIX,
+            SecurityConstants.V3_API_DOCS_PREFIX,
+            SecurityConstants.SWAGGER_RESOURCES_PREFIX,
+            SecurityConstants.WEBJARS_PREFIX
     );
 
     private final String cookieName;
@@ -30,19 +32,27 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
         if (isPublicEndpoint(path)) {
             return null;
         }
-        if (request.getCookies() == null) {
-            return null;
+        if (request.getCookies() != null) {
+            String fromCookie = Arrays.stream(request.getCookies())
+                    .filter(c -> cookieName.equals(c.getName()))
+                    .map(Cookie::getValue)
+                    .filter(StringUtils::hasText)
+                    .findFirst()
+                    .orElse(null);
+            if (fromCookie != null) {
+                return fromCookie;
+            }
         }
-        return Arrays.stream(request.getCookies())
-                .filter(c -> cookieName.equals(c.getName()))
-                .map(Cookie::getValue)
-                .filter(StringUtils::hasText)
-                .findFirst()
-                .orElse(null);
+        String header = request.getHeader(SecurityConstants.AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(header)
+                && header.regionMatches(true, 0, SecurityConstants.BEARER_PREFIX, 0, SecurityConstants.BEARER_PREFIX.length())) {
+            return header.substring(SecurityConstants.BEARER_PREFIX.length()).trim();
+        }
+        return null;
     }
 
     private boolean isPublicEndpoint(String path) {
         return PUBLIC_PREFIXES.stream().anyMatch(path::startsWith)
-                || "/api/v1/users/registration".equals(path);
+                || ApiPath.USER_REGISTRATION.equals(path);
     }
 }

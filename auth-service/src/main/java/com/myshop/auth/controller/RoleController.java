@@ -1,10 +1,10 @@
 package com.myshop.auth.controller;
 
+import com.myshop.auth.constant.ApiPath;
 import com.myshop.auth.dto.request.RoleRequest;
 import com.myshop.auth.dto.response.RoleResponse;
 import com.myshop.auth.service.RoleService;
 import com.myshop.commons.dto.ApiResponse;
-import com.myshop.commons.security.RequirePermission;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api.prefix}/admin/roles")
+@RequestMapping(ApiPath.ADMIN_ROLES)
 @RequiredArgsConstructor
-@RequirePermission("role:manage")
 public class RoleController {
 
     private final RoleService roleService;

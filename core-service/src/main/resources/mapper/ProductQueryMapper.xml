@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myshop.core.mapper.ProductQueryMapper">
+
+    <select id="searchProducts" resultType="com.myshop.core.dto.response.ProductSearchRow">
+        SELECT
+            product_id,
+            product_name,
+            price,
+            special_price,
+            slug,
+            category_id,
+            avg_rating
+        FROM products
+        <where>
+            <if test="name != null and name != ''">
+                AND product_name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="minPrice != null">
+                AND price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
+        </where>
+        ORDER BY product_id DESC
+    </select>
+
+</mapper>

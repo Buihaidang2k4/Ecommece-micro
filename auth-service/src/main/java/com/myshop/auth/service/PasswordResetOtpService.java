@@ -6,7 +6,10 @@ import com.myshop.auth.entity.User;
 import com.myshop.auth.repository.PasswordResetOtpRepository;
 import com.myshop.auth.repository.UserRepository;
 import com.myshop.commons.exception.AppException;
+import com.myshop.commons.exception.BusinessException;
+import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;
+import com.myshop.commons.exception.MessageHandlerUtils;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +52,10 @@ public class PasswordResetOtpService {
             emailService.sendOtpMail(user.getEmail(), otp, user.getEmail());
         } catch (MessagingException e) {
             log.error("Failed to send OTP email to {}", email, e);
-            throw new AppException(ErrorCode.INTERNAL_ERROR, "Failed to send OTP email");
+            throw new BusinessException(
+                    ErrorCode.INTERNAL_ERROR,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.FAILED_SEND_OTP)
+            );
         }
         log.info("OTP sent for user {}", user.getId());
     }

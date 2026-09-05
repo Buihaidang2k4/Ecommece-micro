@@ -15,6 +15,7 @@
     <name>commons</name>
 
     <modules>
+        <module>commons-constants</module>
         <module>commons-exception</module>
         <module>commons-dto</module>
         <module>commons-events</module>

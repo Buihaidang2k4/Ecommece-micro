@@ -1,7 +1,11 @@
 package com.myshop.auth.service;
 
+import com.myshop.commons.constants.RedisKeyConstants;
 import com.myshop.commons.exception.AppException;
+import com.myshop.commons.exception.BusinessException;
+import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;
+import com.myshop.commons.exception.MessageHandlerUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,13 +23,10 @@ import java.util.List;
 @Slf4j
 public class TokenBlacklistService {
 
-    private static final String PREFIX = "blacklist:refresh_token:";
-    private static final String USER_TOKEN_LIST_PREFIX = "refresh_tokens:user:";
-
     private final RedisTemplate<String, Object> redisTemplate;
 
     private String getRedisKey(String token) {
-        return PREFIX + sha256(token);
+        return RedisKeyConstants.BLACKLIST_REFRESH_TOKEN_PREFIX + sha256(token);
     }
 
     public void blacklist(String token, Duration duration) {
@@ -34,7 +35,10 @@ public class TokenBlacklistService {
             redisTemplate.opsForValue().set(key, true, duration);
         } catch (Exception e) {
             log.error("Failed to blacklist token: {}", e.getMessage());
-            throw new AppException(ErrorCode.INTERNAL_ERROR, "Failed to blacklist token");
+            throw new BusinessException(
+                    ErrorCode.INTERNAL_ERROR,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.FAILED_BLACKLIST_TOKEN)
+            );
         }
     }
 
@@ -54,13 +58,13 @@ public class TokenBlacklistService {
     }
 
     public void storeRefreshToken(Long userId, String token) {
-        String listKey = USER_TOKEN_LIST_PREFIX + userId;
+        String listKey = RedisKeyConstants.REFRESH_TOKENS_USER_PREFIX + userId;
         redisTemplate.opsForList().rightPush(listKey, token);
         log.info("Stored refresh token for user [{}]", userId);
     }
 
     public void revokeAllTokensForUser(Long userId, Duration ttl) {
-        String listKey = USER_TOKEN_LIST_PREFIX + userId;
+        String listKey = RedisKeyConstants.REFRESH_TOKENS_USER_PREFIX + userId;
         List<Object> tokens = redisTemplate.opsForList().range(listKey, 0, -1);
         if (tokens != null && !tokens.isEmpty()) {
             for (Object tokenObj : tokens) {

@@ -3,26 +3,15 @@
 ## Architecture (coarse)
 | Module | Port | Role |
 |---|---|---|
-| `service-registry` | 8761 | Eureka |
-| `config-service` | 8888 | Spring Cloud Config (owns all configs) |
-| `api-gateway` | 8080 | Routing, CORS, JWT (HS256) |
-| `auth-service` | 8081 | JWT, RBAC, Google, OTP, Kafka `UserRegistered` |
-| `file-service` | 8084 | MinIO upload / presign / delete |
-| `notification-service` | 8085 | MongoDB + Kafka consumer + email |
-| `core-service` | 8082 | Phase 2 |
-| `payment-service` | 8086 | Phase 3 |
+| `service-registry` | 8762 | Eureka |
+| `config-service` | 8889 | Spring Cloud Config (owns all configs) |
+| `api-gateway` | 8090 | Routing, CORS, JWT (HS256), Redis rate-limiting |
+| `auth-service` | 8091 | JWT (+ `userId` claim), RBAC, Google, OTP, Kafka `UserRegistered` |
+| `core-service` | 8092 | Profile, catalog, inventory, cart, order, coupon, report, review |
+| `file-service` | 8094 | MinIO upload / presign / delete (JWT-secured for writes) |
+| `notification-service` | 8095 | MongoDB + Kafka consumer + email (JWT-secured) |
+| `payment-service` | 8096 | VNPay integration, outbox-based event publishing |
 | `commons/` | — | shared DTO, security, events, exception |
-
-## Config layout (`config-service`)
-```text
-config-service/src/main/resources/
-├── application.yml
-├── config-dev.commons/ / config-prod.commons/ / config-test.commons/
-└── config/{api-gateway,auth-service,core-service,payment-service,file-service,notification-service,service-registry}/
-```
-
-Native search: `classpath:/config/{application},classpath:/config-{profile}.commons`  
-Example: `http://localhost:8888/auth-service/dev`
 
 ## Build
 ```powershell
@@ -40,42 +29,63 @@ docker compose up -d
 | MySQL | **3307** (`auth_db`, `core_db`, `payment_db`) |
 | Redis | **6380** |
 | Kafka | 9092 |
-| Kafka Connect | 8083 |
 | MinIO | 9000 / 9001 |
 | MongoDB | 27017 |
 
-## Run order (Phase 0 + 1)
+## Run order
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
 
-# Platform
 .\mvnw.cmd -pl service-registry spring-boot:run
 .\mvnw.cmd -pl config-service spring-boot:run
-
-# Phase 1
 .\mvnw.cmd -pl auth-service spring-boot:run
+.\mvnw.cmd -pl core-service spring-boot:run
 .\mvnw.cmd -pl file-service spring-boot:run
 .\mvnw.cmd -pl notification-service spring-boot:run
-
-# Gateway last
+.\mvnw.cmd -pl payment-service spring-boot:run
 .\mvnw.cmd -pl api-gateway spring-boot:run
 ```
 
-Default admin (seeded): `admin@gmail.com` / `Admin@123`
+Default admin: `admin@gmail.com` / `Admin@123`
 
-### Smoke checks
-```text
-POST http://localhost:8080/api/v1/auth/login
-POST http://localhost:8080/api/v1/auth/register   → Kafka → notification welcome log in Mongo
-POST http://localhost:8080/api/v1/files/upload
-GET  http://localhost:8080/api/v1/notifications
+## Transactional Outbox
+
+All services use the **outbox pattern** to eliminate dual-write Kafka from the business path:
+- Business logic writes an `outbox` row in the same DB transaction
+- `OutboxRelay` (`@Scheduled`) polls unpublished rows and sends to Kafka, then marks published
+
+### Outbox Relay config (in each service's dev yml)
+```yaml
+myshop:
+  outbox:
+    relay-enabled: true
+    relay-delay-ms: 1000
 ```
 
-Optional env: `JWT_SECRET`, `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `EMAIL_USERNAME` / `EMAIL_PASSWORD`, MinIO vars.
+## Key Endpoints
+```text
+POST /api/v1/auth/login | register  → Kafka → notification + core profile/cart
+GET  /api/v1/auth/me/permissions    → list current user permissions
+GET  /api/v1/admin/permissions      → list all permissions (requires permission:manage)
+GET  /api/v1/products/**
+POST /api/v1/orders/buy-now | /place-order
+POST /api/v1/payment/**
+POST /api/v1/files/upload           → requires media:upload permission
+GET  /api/v1/files/presign          → public (download)
+GET  /api/v1/notifications          → requires authentication
+GET  /api/v1/report/monthly-revenue → requires report:revenue permission
+GET  /api/v1/report/product-revenue → requires report:revenue permission
+```
+
+## Gateway Rate Limiting
+The API Gateway uses Redis-backed `RequestRateLimiter`:
+- **replenishRate**: 50 requests/sec
+- **burstCapacity**: 100 requests
+- Key resolver: client IP address
 
 ## Phases
 - **0** Platform — done  
-- **1** auth / file / notification — done (build verified)  
-- **2** core-service (catalog, cart, order, inventory)  
-- **3** payment-service (VNPay)  
-- **4** stabilize (outbox/CDC, hardening)
+- **1** auth / file / notification (+ MyBatis auth) — done  
+- **2** core-service — done  
+- **3** payment-service (VNPay) — done  
+- **4** stabilize (outbox, hardening, security, rate-limit, report) — done

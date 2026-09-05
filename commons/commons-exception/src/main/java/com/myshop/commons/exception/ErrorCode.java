@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     UNAUTHENTICATED(1001, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1002, "Access denied", HttpStatus.FORBIDDEN),
-    INVALID_TOKEN(1003, "Invalid token", HttpStatus.UNAUTHORIZED),
     RESOURCE_NOT_FOUND(1004, "Resource not found", HttpStatus.NOT_FOUND),
     VALIDATION_ERROR(1005, "Validation failed", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR(1999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),

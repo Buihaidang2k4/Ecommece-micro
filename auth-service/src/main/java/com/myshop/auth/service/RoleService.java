@@ -5,11 +5,14 @@ import com.myshop.auth.dto.response.RoleResponse;
 import com.myshop.auth.entity.Permission;
 import com.myshop.auth.entity.Role;
 import com.myshop.auth.entity.RolePermission;
+import com.myshop.auth.mapper.PermissionMapper;
 import com.myshop.auth.repository.PermissionRepository;
 import com.myshop.auth.repository.RolePermissionRepository;
 import com.myshop.auth.repository.RoleRepository;
-import com.myshop.commons.exception.AppException;
+import com.myshop.commons.exception.BusinessException;
+import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;
+import com.myshop.commons.exception.MessageHandlerUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ public class RoleService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
+    private final PermissionMapper permissionMapper;
 
     @Transactional(readOnly = true)
     public List<RoleResponse> getAllRoles() {
@@ -34,14 +38,20 @@ public class RoleService {
     @Transactional(readOnly = true)
     public RoleResponse getRoleById(Long id) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Role not found"));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.RESOURCE_NOT_FOUND,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+                ));
         return toResponse(role);
     }
 
     @Transactional
     public RoleResponse createRole(RoleRequest request) {
         roleRepository.findByRoleName(request.getRoleName()).ifPresent(r -> {
-            throw new AppException(ErrorCode.VALIDATION_ERROR, "Role already exists");
+            throw new BusinessException(
+                    ErrorCode.VALIDATION_ERROR,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_ALREADY_EXISTS)
+            );
         });
 
         Role role = Role.builder()
@@ -56,7 +66,10 @@ public class RoleService {
     @Transactional
     public RoleResponse updateRole(Long id, RoleRequest request) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Role not found"));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.RESOURCE_NOT_FOUND,
+                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+                ));
 
         if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
             role.setRoleName(request.getRoleName());
@@ -76,7 +89,10 @@ public class RoleService {
     @Transactional
     public void deleteRole(Long id) {
         if (!roleRepository.existsById(id)) {
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Role not found");
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_NOT_FOUND,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+            );
         }
         rolePermissionRepository.deleteByRoleId(id);
         roleRepository.deleteById(id);
@@ -88,7 +104,10 @@ public class RoleService {
         }
         List<Permission> permissions = permissionRepository.findAllById(permissionIds);
         if (permissions.size() != permissionIds.size()) {
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "One or more permissions not found");
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_NOT_FOUND,
+                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.PERMISSIONS_NOT_FOUND)
+            );
         }
         for (Permission permission : permissions) {
             rolePermissionRepository.save(RolePermission.builder()
@@ -99,15 +118,7 @@ public class RoleService {
     }
 
     private RoleResponse toResponse(Role role) {
-        List<Long> permissionIds = rolePermissionRepository.findByRoleId(role.getId()).stream()
-                .map(RolePermission::getPermissionId)
-                .toList();
-        List<String> permissions = permissionIds.isEmpty()
-                ? List.of()
-                : permissionRepository.findAllById(permissionIds).stream()
-                .map(Permission::getCode)
-                .toList();
-
+        List<String> permissions = permissionMapper.findPermissionCodesByRoleId(role.getId());
         return RoleResponse.builder()
                 .id(role.getId())
                 .roleName(role.getRoleName())

@@ -1,19 +1,22 @@
 package com.myshop.auth.controller;
 
+import com.myshop.auth.constant.ApiPath;
 import com.myshop.auth.dto.request.UpdateUserRolesRequest;
 import com.myshop.auth.dto.request.UserRegistrationRequest;
+import com.myshop.auth.dto.response.UserListRow;
 import com.myshop.auth.dto.response.UserResponse;
 import com.myshop.auth.service.UserService;
 import com.myshop.commons.dto.ApiResponse;
-import com.myshop.commons.security.RequirePermission;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("${api.prefix}/users")
+@RequestMapping(ApiPath.USERS)
 @RequiredArgsConstructor
 public class UserController {
 
@@ -25,13 +28,21 @@ public class UserController {
         return ApiResponse.of(200, "User registered", userService.register(request));
     }
 
+    @GetMapping
+    public ApiResponse<List<UserListRow>> listUsers(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(required = false) String roleName
+    ) {
+        return ApiResponse.of(200, "Success", userService.listUsers(email, enabled, roleName));
+    }
+
     @GetMapping("/myInfo")
     public ApiResponse<UserResponse> myInfo() {
         return ApiResponse.of(200, "Success", userService.getMyInfo());
     }
 
     @PutMapping("/{userId}/lock-user")
-    @RequirePermission("user:lock")
     public ApiResponse<Long> lockUser(
             @PathVariable Long userId,
             @RequestParam("lockReason") @NotBlank String lockReason
@@ -41,14 +52,12 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/unlocked-user")
-    @RequirePermission("user:lock")
     public ApiResponse<Long> unlockUser(@PathVariable Long userId) {
         userService.unlockUser(userId);
         return ApiResponse.of(200, "User unlocked", userId);
     }
 
     @PutMapping("/{id}/update-role-user")
-    @RequirePermission("user:write")
     public ApiResponse<UserResponse> updateRoles(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRolesRequest request

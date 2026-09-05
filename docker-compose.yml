@@ -5,10 +5,6 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-      - --log-bin=mysql-bin
-      - --binlog-format=ROW
-      - --binlog-row-image=FULL
-      - --server-id=1
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: myshop
@@ -99,35 +95,6 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 40s
-    networks:
-      - myshop-net
-
-  kafka-connect:
-    image: debezium/connect:2.5
-    container_name: myshop-kafka-connect
-    depends_on:
-      kafka:
-        condition: service_started
-      mysql:
-        condition: service_healthy
-    ports:
-      - "8083:8083"
-    environment:
-      BOOTSTRAP_SERVERS: kafka:9093
-      GROUP_ID: myshop-connect
-      CONFIG_STORAGE_TOPIC: myshop_connect_configs
-      OFFSET_STORAGE_TOPIC: myshop_connect_offsets
-      STATUS_STORAGE_TOPIC: myshop_connect_statuses
-      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/"]
       interval: 15s
       timeout: 10s
       retries: 10
