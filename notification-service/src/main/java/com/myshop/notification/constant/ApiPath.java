@@ -1,10 +1,11 @@
 package com.myshop.notification.constant;
 
+import com.myshop.commons.constants.ApiPrefixes;
+
 public final class ApiPath {
 
     private ApiPath() {
     }
 
-    public static final String API_V1 = "/api/v1";
-    public static final String NOTIFICATIONS = API_V1 + "/notifications";
+    public static final String NOTIFICATIONS = ApiPrefixes.V1 + "/notifications";
 }

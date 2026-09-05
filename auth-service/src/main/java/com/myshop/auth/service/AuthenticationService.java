@@ -16,7 +16,6 @@ import com.myshop.auth.mapper.UserQueryMapper;
 import com.myshop.auth.repository.RoleRepository;
 import com.myshop.auth.repository.UserRepository;
 import com.myshop.auth.repository.UserRoleRepository;
-import com.myshop.commons.exception.AppException;
 import com.myshop.commons.constants.JwtConstants;
 import com.myshop.commons.constants.RoleConstants;
 import com.myshop.commons.exception.ErrorCode;
@@ -107,7 +106,7 @@ public class AuthenticationService {
         GoogleIdToken idToken = verifyIdToken(request.getToken());
         String email = idToken.getPayload().getEmail();
         if (email == null || email.isBlank()) {
-            throw new AppException(ErrorCode.USER_INVALID);
+            throw new BusinessException(ErrorCode.USER_INVALID);
         }
 
         User user = userRepository.findByEmail(email).orElseGet(() -> createGoogleUser(email));
@@ -152,7 +151,7 @@ public class AuthenticationService {
             verifyToken(token, false);
             blacklistService.validate(token);
             return IntrospectResponse.builder().valid(true).exp(exp).build();
-        } catch (AppException e) {
+        } catch (BusinessException e) {
             log.warn("Token introspection failed: {}", e.getMessage());
             return IntrospectResponse.builder().valid(false).exp(exp).build();
         }
@@ -164,8 +163,8 @@ public class AuthenticationService {
         }
         try {
             blacklistService.blacklist(refreshToken, Duration.ofMillis(refreshTokenDurationMs));
-        } catch (AppException e) {
-            throw new AppException(ErrorCode.TOKEN_REVOKED);
+        } catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.TOKEN_REVOKED);
         }
     }
 
@@ -251,7 +250,7 @@ public class AuthenticationService {
 
         GoogleIdToken idToken = verifier.verify(token);
         if (idToken == null) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new BusinessException(ErrorCode.UNAUTHENTICATED);
         }
         return idToken;
     }
@@ -265,16 +264,16 @@ public class AuthenticationService {
         String type = typeClaim == null ? null : typeClaim.toString();
 
         if (!verified) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new BusinessException(ErrorCode.UNAUTHENTICATED);
         }
         if (expiryTime == null || expiryTime.before(new Date())) {
-            throw new AppException(ErrorCode.TOKEN_EXPIRED);
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
         }
         if (isRefresh && !JwtConstants.TYPE_REFRESH.equals(type)) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new BusinessException(ErrorCode.UNAUTHENTICATED);
         }
         if (!isRefresh && !JwtConstants.TYPE_ACCESS.equals(type)) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new BusinessException(ErrorCode.UNAUTHENTICATED);
         }
         return signedJWT;
     }

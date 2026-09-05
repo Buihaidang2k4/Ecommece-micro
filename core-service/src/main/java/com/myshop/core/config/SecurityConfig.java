@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, ApiPath.PRODUCTS_ALL).permitAll()
                         .requestMatchers(HttpMethod.GET, ApiPath.CATEGORIES_ALL).permitAll()
                         .requestMatchers(SecurityConstants.ACTUATOR_ALL).permitAll()
+                        .requestMatchers(SecurityConstants.SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth

@@ -5,7 +5,6 @@ import com.myshop.auth.entity.PasswordResetOtp;
 import com.myshop.auth.entity.User;
 import com.myshop.auth.repository.PasswordResetOtpRepository;
 import com.myshop.auth.repository.UserRepository;
-import com.myshop.commons.exception.AppException;
 import com.myshop.commons.exception.BusinessException;
 import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;
@@ -35,7 +34,7 @@ public class PasswordResetOtpService {
     @Transactional
     public void sendOtp(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED));
 
         otpRepository.deleteAllByUserId(user.getId());
 
@@ -63,13 +62,13 @@ public class PasswordResetOtpService {
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED));
 
         PasswordResetOtp otpEntity = otpRepository.findByUserIdAndOtpCode(user.getId(), request.getOtp())
-                .orElseThrow(() -> new AppException(ErrorCode.OTP_INVALID));
+                .orElseThrow(() -> new BusinessException(ErrorCode.OTP_INVALID));
 
         if (otpEntity.isUsed() || otpEntity.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new AppException(ErrorCode.OTP_INVALID);
+            throw new BusinessException(ErrorCode.OTP_INVALID);
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));

@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(ApiPath.VN_PAY_CALLBACK_FULL).permitAll()
                         .requestMatchers(SecurityConstants.ACTUATOR_ALL).permitAll()
+                        .requestMatchers(SecurityConstants.SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth

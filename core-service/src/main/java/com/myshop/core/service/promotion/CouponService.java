@@ -2,7 +2,6 @@ package com.myshop.core.service.promotion;
 
 import com.myshop.commons.constants.enums.CommonEnums.CouponScope;
 import com.myshop.commons.constants.enums.CommonEnums.DiscountType;
-import com.myshop.commons.exception.AppException;
 import com.myshop.commons.exception.BusinessException;
 import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;

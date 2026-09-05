@@ -1,7 +1,6 @@
 package com.myshop.core.service.customer;
 
 import com.myshop.commons.constants.enums.CommonEnums.AddressType;
-import com.myshop.commons.exception.AppException;
 import com.myshop.commons.exception.BusinessException;
 import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;

@@ -13,6 +13,20 @@
 | `payment-service` | 8096 | VNPay integration, outbox-based event publishing |
 | `commons/` | — | shared DTO, security, events, exception |
 
+## API prefix
+- YAML (gateway routes): `api.prefix` in `config-service/.../config-*.commons/application.yml`
+- Java (`@RequestMapping` / security): `ApiPrefixes.V1` in `commons-constants`
+
+## Swagger UI
+Open per service (not via gateway):
+| Service | URL |
+|---|---|
+| auth | http://localhost:8091/swagger-ui/index.html |
+| core | http://localhost:8092/swagger-ui/index.html |
+| file | http://localhost:8094/swagger-ui/index.html |
+| notification | http://localhost:8095/swagger-ui/index.html |
+| payment | http://localhost:8096/swagger-ui/index.html |
+
 ## Build
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
@@ -82,10 +96,3 @@ The API Gateway uses Redis-backed `RequestRateLimiter`:
 - **replenishRate**: 50 requests/sec
 - **burstCapacity**: 100 requests
 - Key resolver: client IP address
-
-## Phases
-- **0** Platform — done  
-- **1** auth / file / notification (+ MyBatis auth) — done  
-- **2** core-service — done  
-- **3** payment-service (VNPay) — done  
-- **4** stabilize (outbox, hardening, security, rate-limit, report) — done

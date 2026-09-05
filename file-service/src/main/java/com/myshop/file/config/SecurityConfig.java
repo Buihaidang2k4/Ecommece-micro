@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(ApiPath.PRESIGN_FULL, SecurityConstants.ACTUATOR_ALL).permitAll()
+                        .requestMatchers(SecurityConstants.SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth

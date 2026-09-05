@@ -50,6 +50,3 @@ myshop:
   outbox:
     relay-enabled: true
     relay-delay-ms: 1000
-
-api:
-  prefix: /api/v1

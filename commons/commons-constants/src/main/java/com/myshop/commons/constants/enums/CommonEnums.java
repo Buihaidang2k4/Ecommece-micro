@@ -3,10 +3,6 @@ package com.myshop.commons.constants.enums;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-/**
- * Domain status/type codes stored as Integer on entities and API payloads.
- * Nested classes group constants by entity/concept (not Java enums).
- */
 public final class CommonEnums {
 
     private CommonEnums() {

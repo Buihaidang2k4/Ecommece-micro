@@ -1,12 +1,13 @@
 package com.myshop.payment.constant;
 
+import com.myshop.commons.constants.ApiPrefixes;
+
 public final class ApiPath {
 
     private ApiPath() {
     }
 
-    public static final String API_V1 = "/api/v1";
-    public static final String PAYMENT = API_V1 + "/payment";
+    public static final String PAYMENT = ApiPrefixes.V1 + "/payment";
 
     public static final String BY_ID = "/{paymentId}";
     public static final String BY_ORDER = "/order/{orderId}";

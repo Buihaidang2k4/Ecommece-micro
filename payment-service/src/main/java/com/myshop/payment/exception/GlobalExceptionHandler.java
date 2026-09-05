@@ -1,7 +1,7 @@
 package com.myshop.payment.exception;
 
 import com.myshop.commons.dto.ApiResponse;
-import com.myshop.commons.exception.AppException;
+import com.myshop.commons.exception.BusinessException;
 import com.myshop.commons.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AppException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAppException(AppException e) {
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
         String message = e.getMessage() != null ? e.getMessage() : errorCode.getMessage();
         return ResponseEntity.status(errorCode.getHttpStatus())

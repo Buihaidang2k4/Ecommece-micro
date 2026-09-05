@@ -1,4 +1,7 @@
 # Shared config for ALL services — profile: test
+api:
+  prefix: /api/v1
+
 spring:
   data:
     redis:

@@ -38,12 +38,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 ApiPath.AUTH_ALL,
                                 ApiPath.USER_REGISTRATION,
-                                SecurityConstants.ACTUATOR_ALL,
-                                SecurityConstants.SWAGGER_UI_ALL,
-                                SecurityConstants.V3_API_DOCS_ALL,
-                                SecurityConstants.SWAGGER_RESOURCES_ALL,
-                                SecurityConstants.WEBJARS_ALL
+                                SecurityConstants.ACTUATOR_ALL
                         ).permitAll()
+                        .requestMatchers(SecurityConstants.SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth

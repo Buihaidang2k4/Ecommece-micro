@@ -1,7 +1,6 @@
 package com.myshop.auth.service;
 
 import com.myshop.commons.constants.RedisKeyConstants;
-import com.myshop.commons.exception.AppException;
 import com.myshop.commons.exception.BusinessException;
 import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;
@@ -53,7 +52,7 @@ public class TokenBlacklistService {
 
     public void validate(String token) {
         if (isBlacklisted(token)) {
-            throw new AppException(ErrorCode.TOKEN_REVOKED);
+            throw new BusinessException(ErrorCode.TOKEN_REVOKED);
         }
     }
 

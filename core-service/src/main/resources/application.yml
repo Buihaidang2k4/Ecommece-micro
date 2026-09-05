@@ -19,9 +19,6 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8762/eureka/}
 
-api:
-  prefix: /api/v1
-
 myshop:
   security:
     jwt:

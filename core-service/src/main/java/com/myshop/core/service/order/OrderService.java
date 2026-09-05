@@ -7,7 +7,6 @@ import com.myshop.commons.constants.enums.CommonEnums.PaymentMethod;
 import com.myshop.commons.dto.ApiResponse;
 import com.myshop.commons.events.DomainEventType;
 import com.myshop.commons.events.OrderCreatedEvent;
-import com.myshop.commons.exception.AppException;
 import com.myshop.commons.exception.BusinessException;
 import com.myshop.commons.exception.CommonMessageUtils;
 import com.myshop.commons.exception.ErrorCode;

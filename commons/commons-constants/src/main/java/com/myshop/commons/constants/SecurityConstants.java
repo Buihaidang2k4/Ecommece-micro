@@ -13,6 +13,7 @@ public final class SecurityConstants {
     public static final String ACTUATOR_PREFIX = "/actuator/";
     public static final String ACTUATOR_ALL = "/actuator/**";
 
+    public static final String SWAGGER_UI_HTML = "/swagger-ui.html";
     public static final String SWAGGER_UI_PREFIX = "/swagger-ui/";
     public static final String SWAGGER_UI_ALL = "/swagger-ui/**";
     public static final String V3_API_DOCS_PREFIX = "/v3/api-docs";
@@ -21,4 +22,13 @@ public final class SecurityConstants {
     public static final String SWAGGER_RESOURCES_ALL = "/swagger-resources/**";
     public static final String WEBJARS_PREFIX = "/webjars/";
     public static final String WEBJARS_ALL = "/webjars/**";
+
+    public static final String[] SWAGGER_WHITELIST = {
+            SWAGGER_UI_HTML,
+            SWAGGER_UI_ALL,
+            V3_API_DOCS_PREFIX,
+            V3_API_DOCS_ALL,
+            SWAGGER_RESOURCES_ALL,
+            WEBJARS_ALL
+    };
 }

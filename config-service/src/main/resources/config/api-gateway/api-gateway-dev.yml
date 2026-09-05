@@ -5,6 +5,7 @@ spring:
       port: ${REDIS_PORT:6380}
   cloud:
     gateway:
+      # limit
       default-filters:
         - name: RequestRateLimiter
           args:
@@ -26,27 +27,28 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
             allowCredentials: true
+      # route
       routes:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/admin/**
+            - Path=${api.prefix}/auth/**,${api.prefix}/users/**,${api.prefix}/admin/**
         - id: file-service
           uri: lb://file-service
           predicates:
-            - Path=/api/v1/files/**,/api/v1/images/**
+            - Path=${api.prefix}/files/**,${api.prefix}/images/**
         - id: notification-service
           uri: lb://notification-service
           predicates:
-            - Path=/api/v1/notifications/**
+            - Path=${api.prefix}/notifications/**
         - id: payment-service
           uri: lb://payment-service
           predicates:
-            - Path=/api/v1/payment/**
+            - Path=${api.prefix}/payment/**
         - id: core-service
           uri: lb://core-service
           predicates:
-            - Path=/api/v1/**
+            - Path=${api.prefix}/**
 
 myshop:
   security:

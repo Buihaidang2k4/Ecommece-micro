@@ -1,4 +1,7 @@
 # Shared config for ALL services — profile: prod
+api:
+  prefix: ${API_PREFIX:/api/v1}
+
 spring:
   data:
     redis:
