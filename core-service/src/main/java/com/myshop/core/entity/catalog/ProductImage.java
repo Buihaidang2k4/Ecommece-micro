@@ -26,12 +26,6 @@ public class ProductImage {
     @Column(name = "file_type", length = 50)
     private String fileType;
 
-    @Column(name = "object_key", length = 500)
+    @Column(name = "object_key", nullable = false, length = 500)
     private String objectKey;
-
-    @Column(name = "url", length = 1000)
-    private String url;
-
-    @Column(name = "download_url", length = 1000)
-    private String downloadUrl;
 }

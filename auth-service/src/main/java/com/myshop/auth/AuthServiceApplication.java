@@ -9,9 +9,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableMethodSecurity
 @EnableScheduling
-@MapperScan("com.myshop.auth.mapper")
 public class AuthServiceApplication {
 
     public static void main(String[] args) {

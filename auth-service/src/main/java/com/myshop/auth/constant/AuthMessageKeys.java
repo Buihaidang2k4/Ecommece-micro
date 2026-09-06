@@ -21,4 +21,6 @@ public final class AuthMessageKeys {
     public static final String FAILED_CREATE_TOKEN = "auth.token.create_failed";
     public static final String FAILED_BLACKLIST_TOKEN = "auth.token.blacklist_failed";
     public static final String FAILED_SEND_OTP = "auth.otp.send_failed";
+    public static final String OTP_INVALID = "auth.otp.invalid";
+    public static final String USER_INVALID = "auth.user.invalid";
 }

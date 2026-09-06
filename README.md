@@ -1,5 +1,7 @@
 # MyShop Ecommerce Microservices
 
+Chi tiết cách từng service hoạt động: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+
 ## Architecture (coarse)
 | Module | Port | Role |
 |---|---|---|
@@ -84,8 +86,10 @@ GET  /api/v1/admin/permissions      → list all permissions (requires permissio
 GET  /api/v1/products/**
 POST /api/v1/orders/buy-now | /place-order
 POST /api/v1/payment/**
-POST /api/v1/files/upload           → requires media:upload permission
-GET  /api/v1/files/presign          → public (download)
+POST /api/v1/files/upload           → bucket, objectKey, file (media:upload)
+POST /api/v1/files/presign-upload   → bucket, objectKey, contentType?
+GET  /api/v1/files/presign          → bucket, objectKey (public download)
+DELETE /api/v1/files                → bucket, objectKey
 GET  /api/v1/notifications          → requires authentication
 GET  /api/v1/report/monthly-revenue → requires report:revenue permission
 GET  /api/v1/report/product-revenue → requires report:revenue permission

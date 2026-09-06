@@ -16,7 +16,18 @@ public final class ApiPath {
     public static final String ORDERS = ApiPrefixes.V1 + "/orders";
     public static final String PRODUCTS = ApiPrefixes.V1 + "/products";
     public static final String PRODUCTS_ALL = PRODUCTS + "/**";
+    public static final String PRODUCT_BY_ID = "/{id}";
+    public static final String PRODUCT_BY_SLUG = "/slug/{slug}";
+    public static final String PRODUCT_IMAGES = "/{id}/images";
+    public static final String PRODUCT_IMAGES_PRESIGN = "/{id}/images/presign";
+    public static final String PRODUCT_IMAGE_BY_ID = "/images/{imageId}";
+
     public static final String PROFILES = ApiPrefixes.V1 + "/profiles";
+    public static final String PROFILE_ME = "/me";
+    public static final String PROFILE_BY_ID = "/{profileId}";
+    public static final String PROFILE_BY_USER = "/by-user/{userId}";
+    public static final String PROFILE_ME_AVATAR = "/me/avatar";
+    public static final String PROFILE_ME_AVATAR_PRESIGN = "/me/avatar/presign";
     public static final String REPORT = ApiPrefixes.V1 + "/report";
     public static final String REVIEWS = ApiPrefixes.V1 + "/reviews";
 
@@ -25,6 +36,8 @@ public final class ApiPath {
     public static final String PAYMENT_SERVICE_BY_ID = PAYMENT_SERVICE + "/{id}";
     public static final String PAYMENT_SERVICE_BY_ORDER = PAYMENT_SERVICE + "/order/{orderId}";
 
-    /** Feign → file-service */
-    public static final String FILE_SERVICE_PRESIGN = ApiPrefixes.V1 + "/files/presign";
+    /** Feign → file-service (caller must pass bucket + objectKey) */
+    public static final String FILE_SERVICE = ApiPrefixes.V1 + "/files";
+    public static final String FILE_SERVICE_PRESIGN = FILE_SERVICE + "/presign";
+    public static final String FILE_SERVICE_PRESIGN_UPLOAD = FILE_SERVICE + "/presign-upload";
 }

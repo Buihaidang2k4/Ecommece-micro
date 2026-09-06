@@ -18,4 +18,6 @@ public class ProfileResponse {
     private String gender;
     private LocalDate birthDate;
     private String mobileNumber;
+    private String avatarObjectKey;
+    private String avatarUrl;
 }

@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableMethodSecurity
 public class FileServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FileServiceApplication.class, args);

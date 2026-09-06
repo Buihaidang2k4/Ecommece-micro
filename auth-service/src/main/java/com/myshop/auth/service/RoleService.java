@@ -11,7 +11,6 @@ import com.myshop.auth.repository.RolePermissionRepository;
 import com.myshop.auth.repository.RoleRepository;
 import com.myshop.commons.exception.BusinessException;
 import com.myshop.auth.constant.AuthMessageKeys;
-import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,20 +37,14 @@ public class RoleService {
     @Transactional(readOnly = true)
     public RoleResponse getRoleById(Long id) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)
-                ));
+                .orElseThrow(() -> new BusinessException(MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)));
         return toResponse(role);
     }
 
     @Transactional
     public RoleResponse createRole(RoleRequest request) {
         roleRepository.findByRoleName(request.getRoleName()).ifPresent(r -> {
-            throw new BusinessException(
-                    ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_ALREADY_EXISTS)
-            );
+            throw new BusinessException(MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_ALREADY_EXISTS));
         });
 
         Role role = Role.builder()
@@ -66,10 +59,7 @@ public class RoleService {
     @Transactional
     public RoleResponse updateRole(Long id, RoleRequest request) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)
-                ));
+                .orElseThrow(() -> new BusinessException(MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)));
 
         if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
             role.setRoleName(request.getRoleName());
@@ -89,10 +79,7 @@ public class RoleService {
     @Transactional
     public void deleteRole(Long id) {
         if (!roleRepository.existsById(id)) {
-            throw new BusinessException(
-                    ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)
-            );
+            throw new BusinessException(MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND));
         }
         rolePermissionRepository.deleteByRoleId(id);
         roleRepository.deleteById(id);
@@ -104,10 +91,7 @@ public class RoleService {
         }
         List<Permission> permissions = permissionRepository.findAllById(permissionIds);
         if (permissions.size() != permissionIds.size()) {
-            throw new BusinessException(
-                    ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(AuthMessageKeys.PERMISSIONS_NOT_FOUND)
-            );
+            throw new BusinessException(MessageHandlerUtils.getMessage(AuthMessageKeys.PERMISSIONS_NOT_FOUND));
         }
         for (Permission permission : permissions) {
             rolePermissionRepository.save(RolePermission.builder()

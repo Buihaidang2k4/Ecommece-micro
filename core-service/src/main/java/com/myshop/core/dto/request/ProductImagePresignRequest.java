@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductImageRequest {
-    private String objectKey;
+public class ProductImagePresignRequest {
     private String fileName;
-    private String fileType;
+    private String contentType;
 }

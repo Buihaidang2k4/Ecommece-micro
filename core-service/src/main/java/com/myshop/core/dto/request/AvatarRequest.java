@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductImageRequest {
+public class AvatarRequest {
     private String objectKey;
-    private String fileName;
-    private String fileType;
 }

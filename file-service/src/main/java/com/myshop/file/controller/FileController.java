@@ -2,14 +2,14 @@ package com.myshop.file.controller;
 
 import com.myshop.commons.dto.ApiResponse;
 import com.myshop.file.constant.ApiPath;
+import com.myshop.file.dto.response.FileUploadResponse;
+import com.myshop.file.dto.response.PresignGetResponse;
+import com.myshop.file.dto.response.PresignUploadResponse;
 import com.myshop.file.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping(ApiPath.FILES)
@@ -18,29 +18,43 @@ public class FileController {
     private final StorageService storageService;
 
     @PostMapping(ApiPath.UPLOAD)
-    public ResponseEntity<ApiResponse<Map<String, String>>> upload(@RequestParam("file") MultipartFile file) throws Exception {
-        String objectKey = storageService.upload(file);
-        return ResponseEntity.ok(ApiResponse.ok(Map.of("objectKey", objectKey)));
+    public ResponseEntity<ApiResponse<FileUploadResponse>> upload(
+            @RequestParam String bucket,
+            @RequestParam String objectKey,
+            @RequestParam("file") MultipartFile file) throws Exception {
+        storageService.upload(bucket, objectKey, file);
+        return ResponseEntity.ok(ApiResponse.ok(FileUploadResponse.builder()
+                .objectKey(objectKey)
+                .build()));
     }
 
     @PostMapping(ApiPath.PRESIGN_UPLOAD)
-    public ResponseEntity<ApiResponse<Map<String, String>>> presignUpload(
-            @RequestParam String fileName,
+    public ResponseEntity<ApiResponse<PresignUploadResponse>> presignUpload(
+            @RequestParam String bucket,
+            @RequestParam String objectKey,
             @RequestParam(required = false) String contentType) throws Exception {
-        String objectKey = UUID.randomUUID() + "-" + fileName;
-        String url = storageService.presignPut(objectKey, contentType);
-        return ResponseEntity.ok(ApiResponse.ok(Map.of("objectKey", objectKey, "uploadUrl", url)));
+        String url = storageService.presignPut(bucket, objectKey, contentType);
+        return ResponseEntity.ok(ApiResponse.ok(PresignUploadResponse.builder()
+                .objectKey(objectKey)
+                .uploadUrl(url)
+                .build()));
     }
 
     @GetMapping(ApiPath.PRESIGN)
-    public ResponseEntity<ApiResponse<Map<String, String>>> presignGet(@RequestParam String objectKey) throws Exception {
-        String url = storageService.presignGet(objectKey);
-        return ResponseEntity.ok(ApiResponse.ok(Map.of("url", url)));
+    public ResponseEntity<ApiResponse<PresignGetResponse>> presignGet(
+            @RequestParam String bucket,
+            @RequestParam String objectKey) throws Exception {
+        String url = storageService.presignGet(bucket, objectKey);
+        return ResponseEntity.ok(ApiResponse.ok(PresignGetResponse.builder()
+                .url(url)
+                .build()));
     }
 
     @DeleteMapping
-    public ResponseEntity<ApiResponse<Void>> delete(@RequestParam String objectKey) throws Exception {
-        storageService.delete(objectKey);
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @RequestParam String bucket,
+            @RequestParam String objectKey) throws Exception {
+        storageService.delete(bucket, objectKey);
         return ResponseEntity.ok(ApiResponse.of(200, "Deleted", null));
     }
 }

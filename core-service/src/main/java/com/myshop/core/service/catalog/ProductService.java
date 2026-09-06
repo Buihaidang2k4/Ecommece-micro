@@ -1,11 +1,18 @@
 package com.myshop.core.service.catalog;
 
+import com.myshop.commons.dto.ApiResponse;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
+import com.myshop.core.client.FileServiceClient;
+import com.myshop.core.constant.CoreMessageKeys;
+import com.myshop.core.constant.StorageBuckets;
+import com.myshop.core.dto.file.PresignGetResponseDto;
+import com.myshop.core.dto.file.PresignUploadResponseDto;
+import com.myshop.core.dto.request.ProductImagePresignRequest;
 import com.myshop.core.dto.request.ProductImageRequest;
 import com.myshop.core.dto.request.ProductRequest;
+import com.myshop.core.dto.response.MediaPresignResponse;
 import com.myshop.core.dto.response.ProductImageResponse;
 import com.myshop.core.dto.response.ProductResponse;
 import com.myshop.core.dto.response.ProductSearchRow;
@@ -14,11 +21,12 @@ import com.myshop.core.entity.catalog.ProductImage;
 import com.myshop.core.mapper.ProductQueryMapper;
 import com.myshop.core.repository.ProductImageRepository;
 import com.myshop.core.repository.ProductRepository;
+import com.myshop.core.util.ObjectKeyUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,22 +39,19 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductQueryMapper productQueryMapper;
+    private final FileServiceClient fileServiceClient;
 
     public List<ProductSearchRow> search(String name, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice) {
         return productQueryMapper.searchProducts(name, categoryId, minPrice, maxPrice);
     }
 
-    @Cacheable(value = "products", key = "#id")
     public ProductResponse getById(Long id) {
         Product p = productRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
                         MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
                 ));
-        List<ProductImageResponse> images = productImageRepository.findByProductId(id).stream()
-                .map(this::toImageResponse)
-                .toList();
-        return toResponse(p, images);
+        return toResponse(p, mapImages(id));
     }
 
     public ProductResponse getBySlug(String slug) {
@@ -55,10 +60,7 @@ public class ProductService {
                         ErrorCode.RESOURCE_NOT_FOUND,
                         MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
                 ));
-        List<ProductImageResponse> images = productImageRepository.findByProductId(p.getProductId()).stream()
-                .map(this::toImageResponse)
-                .toList();
-        return toResponse(p, images);
+        return toResponse(p, mapImages(p.getProductId()));
     }
 
     @Transactional
@@ -110,9 +112,7 @@ public class ProductService {
         if (request.getOrigin() != null) product.setOrigin(request.getOrigin());
         product.setUpdateAt(LocalDateTime.now());
         productRepository.save(product);
-        List<ProductImageResponse> images = productImageRepository.findByProductId(id).stream()
-                .map(this::toImageResponse).toList();
-        return toResponse(product, images);
+        return toResponse(product, mapImages(id));
     }
 
     @Transactional
@@ -124,10 +124,37 @@ public class ProductService {
                     MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
             );
         }
+        List<ProductImage> images = productImageRepository.findByProductId(id);
+        for (ProductImage image : images) {
+            fileServiceClient.delete(StorageBuckets.PRODUCT_FILES, image.getObjectKey());
+        }
+        productImageRepository.deleteByProductId(id);
         productRepository.deleteById(id);
     }
 
+    public MediaPresignResponse presignImage(Long productId, ProductImagePresignRequest request) {
+        if (!productRepository.existsById(productId)) {
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_NOT_FOUND,
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
+            );
+        }
+        String objectKey = ObjectKeyUtils.productImageKey(productId, request.getFileName());
+        ApiResponse<PresignUploadResponseDto> response = fileServiceClient.presignUpload(
+                StorageBuckets.PRODUCT_FILES,
+                objectKey,
+                request.getContentType()
+        );
+        PresignUploadResponseDto data = requireData(response);
+        return MediaPresignResponse.builder()
+                .bucket(StorageBuckets.PRODUCT_FILES)
+                .objectKey(data.getObjectKey() != null ? data.getObjectKey() : objectKey)
+                .uploadUrl(data.getUploadUrl())
+                .build();
+    }
+
     @Transactional
+    @CacheEvict(value = "products", key = "#productId")
     public ProductImageResponse addImage(Long productId, ProductImageRequest request) {
         if (!productRepository.existsById(productId)) {
             throw new BusinessException(
@@ -135,13 +162,14 @@ public class ProductService {
                     MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
             );
         }
+        if (!StringUtils.hasText(request.getObjectKey())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "objectKey is required");
+        }
         ProductImage image = ProductImage.builder()
                 .productId(productId)
                 .fileName(request.getFileName())
                 .fileType(request.getFileType())
                 .objectKey(request.getObjectKey())
-                .url(request.getUrl())
-                .downloadUrl(request.getDownloadUrl())
                 .build();
         productImageRepository.save(image);
         return toImageResponse(image);
@@ -149,13 +177,19 @@ public class ProductService {
 
     @Transactional
     public void deleteImage(Long imageId) {
-        if (!productImageRepository.existsById(imageId)) {
-            throw new BusinessException(
-                    ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CoreMessageKeys.IMAGE_NOT_FOUND)
-            );
-        }
+        ProductImage image = productImageRepository.findById(imageId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.RESOURCE_NOT_FOUND,
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.IMAGE_NOT_FOUND)
+                ));
+        fileServiceClient.delete(StorageBuckets.PRODUCT_FILES, image.getObjectKey());
         productImageRepository.deleteById(imageId);
+    }
+
+    private List<ProductImageResponse> mapImages(Long productId) {
+        return productImageRepository.findByProductId(productId).stream()
+                .map(this::toImageResponse)
+                .toList();
     }
 
     private ProductResponse toResponse(Product p, List<ProductImageResponse> images) {
@@ -182,13 +216,26 @@ public class ProductService {
     }
 
     private ProductImageResponse toImageResponse(ProductImage img) {
+        String url = null;
+        if (StringUtils.hasText(img.getObjectKey())) {
+            ApiResponse<PresignGetResponseDto> response =
+                    fileServiceClient.presignGet(StorageBuckets.PRODUCT_FILES, img.getObjectKey());
+            PresignGetResponseDto data = response != null ? response.getData() : null;
+            url = data != null ? data.getUrl() : null;
+        }
         return ProductImageResponse.builder()
                 .id(img.getId())
                 .fileName(img.getFileName())
                 .fileType(img.getFileType())
                 .objectKey(img.getObjectKey())
-                .url(img.getUrl())
-                .downloadUrl(img.getDownloadUrl())
+                .url(url)
                 .build();
+    }
+
+    private static <T> T requireData(ApiResponse<T> response) {
+        if (response == null || response.getData() == null) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "file-service returned empty response");
+        }
+        return response.getData();
     }
 }

@@ -16,6 +16,6 @@ public class ProductImageResponse implements Serializable {
     private String fileName;
     private String fileType;
     private String objectKey;
+    /** Temporary MinIO presigned GET URL (not persisted). */
     private String url;
-    private String downloadUrl;
 }

@@ -1,4 +1,4 @@
-package com.myshop.core.dto.request;
+package com.myshop.core.dto.file;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductImageRequest {
+public class PresignUploadResponseDto {
     private String objectKey;
-    private String fileName;
-    private String fileType;
+    private String uploadUrl;
 }

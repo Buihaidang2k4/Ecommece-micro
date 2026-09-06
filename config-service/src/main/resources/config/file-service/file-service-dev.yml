@@ -2,7 +2,7 @@ minio:
   url: ${MINIO_URL:http://localhost:9000}
   access-key: ${MINIO_ACCESS_KEY:admin}
   secret-key: ${MINIO_SECRET_KEY:admin123}
-  bucket: ${MINIO_BUCKET:product-files}
+  # bucket is chosen by the calling service (request param), not fixed here
   presign-expire: ${MINIO_PRESIGN_EXPIRE:300}
 
 spring:

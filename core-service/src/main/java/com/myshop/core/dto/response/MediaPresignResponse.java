@@ -1,4 +1,4 @@
-package com.myshop.core.dto.request;
+package com.myshop.core.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductImageRequest {
+public class MediaPresignResponse {
+    private String bucket;
     private String objectKey;
-    private String fileName;
-    private String fileType;
+    private String uploadUrl;
 }

@@ -15,4 +15,10 @@ public class BusinessException extends RuntimeException {
         super(message);
         this.errorCode = errorCode;
     }
+
+    /** Business error with i18n/custom message; HTTP 400 + VALIDATION_ERROR code. */
+    public BusinessException(String message) {
+        super(message);
+        this.errorCode = ErrorCode.VALIDATION_ERROR;
+    }
 }

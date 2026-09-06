@@ -34,10 +34,7 @@ public class TokenBlacklistService {
             redisTemplate.opsForValue().set(key, true, duration);
         } catch (Exception e) {
             log.error("Failed to blacklist token: {}", e.getMessage());
-            throw new BusinessException(
-                    ErrorCode.INTERNAL_ERROR,
-                    MessageHandlerUtils.getMessage(AuthMessageKeys.FAILED_BLACKLIST_TOKEN)
-            );
+            throw new BusinessException(MessageHandlerUtils.getMessage(AuthMessageKeys.FAILED_BLACKLIST_TOKEN));
         }
     }
 

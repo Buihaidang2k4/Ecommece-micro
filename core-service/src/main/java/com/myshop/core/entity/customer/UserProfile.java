@@ -33,4 +33,7 @@ public class UserProfile {
 
     @Column(name = "mobile_number", length = 20)
     private String mobileNumber;
+
+    @Column(name = "avatar_object_key", length = 500)
+    private String avatarObjectKey;
 }
