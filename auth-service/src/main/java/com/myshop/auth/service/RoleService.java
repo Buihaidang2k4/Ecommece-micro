@@ -10,7 +10,7 @@ import com.myshop.auth.repository.PermissionRepository;
 import com.myshop.auth.repository.RolePermissionRepository;
 import com.myshop.auth.repository.RoleRepository;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.auth.constant.AuthMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class RoleService {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)
                 ));
         return toResponse(role);
     }
@@ -50,7 +50,7 @@ public class RoleService {
         roleRepository.findByRoleName(request.getRoleName()).ifPresent(r -> {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_ALREADY_EXISTS)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_ALREADY_EXISTS)
             );
         });
 
@@ -68,7 +68,7 @@ public class RoleService {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)
                 ));
 
         if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
@@ -91,7 +91,7 @@ public class RoleService {
         if (!roleRepository.existsById(id)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)
             );
         }
         rolePermissionRepository.deleteByRoleId(id);
@@ -106,7 +106,7 @@ public class RoleService {
         if (permissions.size() != permissionIds.size()) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.PERMISSIONS_NOT_FOUND)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.PERMISSIONS_NOT_FOUND)
             );
         }
         for (Permission permission : permissions) {

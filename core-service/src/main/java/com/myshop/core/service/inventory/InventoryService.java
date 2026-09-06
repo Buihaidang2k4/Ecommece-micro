@@ -1,7 +1,7 @@
 package com.myshop.core.service.inventory;
 
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.InventoryRequest;
@@ -24,7 +24,7 @@ public class InventoryService {
         Inventory inv = inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.INVENTORY_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.INVENTORY_NOT_FOUND)
                 ));
         return toResponse(inv);
     }
@@ -48,12 +48,12 @@ public class InventoryService {
         Inventory inv = inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.INVENTORY_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.INVENTORY_NOT_FOUND)
                 ));
         if (inv.getAvailable() < qty) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.INSUFFICIENT_STOCK, productId)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.INSUFFICIENT_STOCK, productId)
             );
         }
         inv.setAvailable(inv.getAvailable() - qty);
@@ -67,7 +67,7 @@ public class InventoryService {
         Inventory inv = inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.INVENTORY_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.INVENTORY_NOT_FOUND)
                 ));
         inv.setReserved(Math.max(0, inv.getReserved() - qty));
         inv.setAvailable(inv.getAvailable() + qty);

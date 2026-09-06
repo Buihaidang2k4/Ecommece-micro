@@ -53,27 +53,7 @@
 
             <dependency>
                 <groupId>com.myshop</groupId>
-                <artifactId>commons-security</artifactId>
-                <version>${myshop.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.myshop</groupId>
-                <artifactId>commons-constants</artifactId>
-                <version>${myshop.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.myshop</groupId>
-                <artifactId>commons-exception</artifactId>
-                <version>${myshop.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.myshop</groupId>
-                <artifactId>commons-dto</artifactId>
-                <version>${myshop.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.myshop</groupId>
-                <artifactId>commons-events</artifactId>
+                <artifactId>commons</artifactId>
                 <version>${myshop.version}</version>
             </dependency>
             <dependency>

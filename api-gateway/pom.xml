@@ -14,11 +14,12 @@
     <name>api-gateway</name>
 
     <dependencies>
+        
         <dependency>
             <groupId>com.myshop</groupId>
-            <artifactId>commons-constants</artifactId>
+            <artifactId>commons</artifactId>
         </dependency>
-        <dependency>
+<dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>

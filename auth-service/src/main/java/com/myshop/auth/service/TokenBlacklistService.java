@@ -1,8 +1,8 @@
 package com.myshop.auth.service;
 
-import com.myshop.commons.constants.RedisKeyConstants;
+import com.myshop.auth.constant.RedisKeyConstants;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.auth.constant.AuthMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class TokenBlacklistService {
             log.error("Failed to blacklist token: {}", e.getMessage());
             throw new BusinessException(
                     ErrorCode.INTERNAL_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.FAILED_BLACKLIST_TOKEN)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.FAILED_BLACKLIST_TOKEN)
             );
         }
     }

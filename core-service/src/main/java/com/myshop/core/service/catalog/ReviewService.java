@@ -1,7 +1,7 @@
 package com.myshop.core.service.catalog;
 
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.ReviewRequest;
@@ -54,7 +54,7 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.REVIEW_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.REVIEW_NOT_FOUND)
                 ));
         review.setDeleted(true);
         reviewRepository.save(review);

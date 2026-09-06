@@ -1,5 +1,7 @@
 package com.myshop.auth.service;
 
+import com.myshop.auth.exception.AuthErrorCode;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -17,10 +19,10 @@ import com.myshop.auth.repository.RoleRepository;
 import com.myshop.auth.repository.UserRepository;
 import com.myshop.auth.repository.UserRoleRepository;
 import com.myshop.commons.constants.JwtConstants;
-import com.myshop.commons.constants.RoleConstants;
+import com.myshop.auth.constant.RoleConstants;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.auth.constant.AuthMessageKeys;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -80,20 +82,20 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(LoginRequest request) throws ParseException {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.INVALID_CREDENTIALS,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.INVALID_CREDENTIALS)
+                        AuthErrorCode.INVALID_CREDENTIALS,
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.INVALID_CREDENTIALS)
                 ));
 
         if (!user.isEnabled()) {
             throw new BusinessException(
-                    ErrorCode.USER_ALREADY_LOCKED,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+                    AuthErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.USER_ALREADY_LOCKED)
             );
         }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BusinessException(
-                    ErrorCode.PASSWORD_NOT_MATCHES,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.PASSWORD_NOT_MATCHES)
+                    AuthErrorCode.PASSWORD_NOT_MATCHES,
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.PASSWORD_NOT_MATCHES)
             );
         }
 
@@ -106,14 +108,14 @@ public class AuthenticationService {
         GoogleIdToken idToken = verifyIdToken(request.getToken());
         String email = idToken.getPayload().getEmail();
         if (email == null || email.isBlank()) {
-            throw new BusinessException(ErrorCode.USER_INVALID);
+            throw new BusinessException(AuthErrorCode.USER_INVALID);
         }
 
         User user = userRepository.findByEmail(email).orElseGet(() -> createGoogleUser(email));
         if (!user.isEnabled()) {
             throw new BusinessException(
-                    ErrorCode.USER_ALREADY_LOCKED,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+                    AuthErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.USER_ALREADY_LOCKED)
             );
         }
         return issueTokens(user);
@@ -125,13 +127,13 @@ public class AuthenticationService {
         String email = signedJWT.getJWTClaimsSet().getSubject();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.USER_NOT_EXISTED,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                        AuthErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_NOT_FOUND)
                 ));
         if (!user.isEnabled()) {
             throw new BusinessException(
-                    ErrorCode.USER_ALREADY_LOCKED,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+                    AuthErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.USER_ALREADY_LOCKED)
             );
         }
         return generateAccessToken(user);
@@ -228,7 +230,7 @@ public class AuthenticationService {
         Role userRole = roleRepository.findByRoleName(RoleConstants.USER)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ROLE_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_ROLE_NOT_FOUND)
                 ));
 
         User user = User.builder()
@@ -309,7 +311,7 @@ public class AuthenticationService {
         } catch (JOSEException e) {
             throw new BusinessException(
                     ErrorCode.INTERNAL_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.FAILED_CREATE_TOKEN)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.FAILED_CREATE_TOKEN)
             );
         }
     }

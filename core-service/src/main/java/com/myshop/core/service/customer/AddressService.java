@@ -1,8 +1,8 @@
 package com.myshop.core.service.customer;
 
-import com.myshop.commons.constants.enums.CommonEnums.AddressType;
+import com.myshop.core.constant.CoreEnums.AddressType;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.AddressRequest;
@@ -58,7 +58,7 @@ public class AddressService {
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.ADDRESS_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.ADDRESS_NOT_FOUND)));
         if (request.getFullName() != null) address.setFullName(request.getFullName());
         if (request.getPhone() != null) address.setPhone(request.getPhone());
         if (request.getStreet() != null) address.setStreet(request.getStreet());
@@ -83,7 +83,7 @@ public class AddressService {
         if (!addressRepository.existsById(addressId)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.ADDRESS_NOT_FOUND));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.ADDRESS_NOT_FOUND));
         }
         addressRepository.deleteById(addressId);
     }

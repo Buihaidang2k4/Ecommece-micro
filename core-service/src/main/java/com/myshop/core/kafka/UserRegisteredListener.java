@@ -1,6 +1,6 @@
 package com.myshop.core.kafka;
 
-import com.myshop.commons.constants.KafkaConstants;
+import com.myshop.core.constant.CoreKafkaConstants;
 import com.myshop.commons.events.UserRegisteredEvent;
 import com.myshop.core.entity.cart.Cart;
 import com.myshop.core.entity.customer.UserProfile;
@@ -24,7 +24,7 @@ public class UserRegisteredListener {
 
     @KafkaListener(
             topics = "${myshop.kafka.user-registered-topic:myshop.user.registered}",
-            groupId = KafkaConstants.CONSUMER_GROUP_CORE
+            groupId = CoreKafkaConstants.CONSUMER_GROUP
     )
     @Transactional
     public void onUserRegistered(UserRegisteredEvent event) {

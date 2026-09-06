@@ -2,13 +2,12 @@ package com.myshop.core.service.order;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.myshop.commons.constants.enums.CommonEnums.OrderStatus;
-import com.myshop.commons.constants.enums.CommonEnums.PaymentMethod;
+import com.myshop.core.constant.CoreEnums.OrderStatus;
 import com.myshop.commons.dto.ApiResponse;
 import com.myshop.commons.events.DomainEventType;
 import com.myshop.commons.events.OrderCreatedEvent;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.client.PaymentServiceClient;
@@ -69,11 +68,11 @@ public class OrderService {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PRODUCT_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)));
         Address address = addressRepository.findById(request.getAddressId())
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.ADDRESS_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.ADDRESS_NOT_FOUND)));
 
         BigDecimal unitPrice = product.getSpecialPrice() != null ? product.getSpecialPrice() : product.getPrice();
         BigDecimal itemTotal = unitPrice.multiply(BigDecimal.valueOf(request.getQuantity()));
@@ -126,17 +125,17 @@ public class OrderService {
         Cart cart = cartRepository.findByProfileId(request.getProfileId())
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CART_NOT_FOUND)));
         List<CartItem> cartItems = cartItemRepository.findByCartId(cart.getCartId());
         if (cartItems.isEmpty()) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_EMPTY));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.CART_EMPTY));
         }
         Address address = addressRepository.findById(request.getAddressId())
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.ADDRESS_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.ADDRESS_NOT_FOUND)));
 
         BigDecimal itemsTotal = BigDecimal.ZERO;
         for (CartItem ci : cartItems) {
@@ -199,7 +198,7 @@ public class OrderService {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.ORDER_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.ORDER_NOT_FOUND)));
         return buildOrderResponse(order);
     }
 
@@ -214,12 +213,12 @@ public class OrderService {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.ORDER_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.ORDER_NOT_FOUND)));
         if (Objects.equals(order.getOrderStatus(), OrderStatus.SHIPPED)
                 || Objects.equals(order.getOrderStatus(), OrderStatus.DELIVERED)) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CANNOT_CANCEL_ORDER));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.CANNOT_CANCEL_ORDER));
         }
 
         List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
@@ -351,7 +350,7 @@ public class OrderService {
         if (resp == null || resp.getData() == null) {
             throw new BusinessException(
                     ErrorCode.INTERNAL_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.FAILED_CREATE_PAYMENT));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.FAILED_CREATE_PAYMENT));
         }
         return resp.getData();
     }

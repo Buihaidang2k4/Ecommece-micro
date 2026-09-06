@@ -1,9 +1,8 @@
 package com.myshop.core.service.promotion;
 
-import com.myshop.commons.constants.enums.CommonEnums.CouponScope;
-import com.myshop.commons.constants.enums.CommonEnums.DiscountType;
+import com.myshop.core.constant.CoreEnums.DiscountType;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.CouponRequest;
@@ -33,7 +32,7 @@ public class CouponService {
         Coupon c = couponRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_NOT_FOUND)));
         return toResponse(c);
     }
 
@@ -64,7 +63,7 @@ public class CouponService {
         Coupon coupon = couponRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_NOT_FOUND)));
         coupon.setCode(request.getCode());
         coupon.setScope(request.getScope());
         coupon.setDiscountType(request.getDiscountType());
@@ -87,7 +86,7 @@ public class CouponService {
         if (!couponRepository.existsById(id)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_NOT_FOUND));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_NOT_FOUND));
         }
         couponRepository.deleteById(id);
     }
@@ -98,33 +97,33 @@ public class CouponService {
         Coupon coupon = couponRepository.findByCode(couponCode)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_NOT_FOUND)));
 
         if (!Boolean.TRUE.equals(coupon.getEnabled())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_DISABLED));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_DISABLED));
         }
         LocalDateTime now = LocalDateTime.now();
         if (coupon.getStartDate() != null && now.isBefore(coupon.getStartDate())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_NOT_ACTIVE));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_NOT_ACTIVE));
         }
         if (coupon.getExpiryDate() != null && now.isAfter(coupon.getExpiryDate())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_EXPIRED));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_EXPIRED));
         }
         if (coupon.getUsageLimit() != null && coupon.getUsedCount() >= coupon.getUsageLimit()) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_USAGE_LIMIT));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_USAGE_LIMIT));
         }
         if (coupon.getMinOrderValue() != null && orderTotal.compareTo(coupon.getMinOrderValue()) < 0) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.COUPON_MIN_ORDER));
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.COUPON_MIN_ORDER));
         }
 
         BigDecimal discount;

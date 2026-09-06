@@ -1,7 +1,7 @@
 package com.myshop.core.service.cart;
 
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.CartItemRequest;
@@ -32,7 +32,7 @@ public class CartService {
         Cart cart = cartRepository.findByProfileId(profileId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CART_NOT_FOUND)
                 ));
         List<CartItemResponse> items = cartItemRepository.findByCartId(cart.getCartId()).stream()
                 .map(this::toItemResponse).toList();
@@ -50,7 +50,7 @@ public class CartService {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PRODUCT_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
                 ));
 
         BigDecimal unitPrice = product.getSpecialPrice() != null ? product.getSpecialPrice() : product.getPrice();
@@ -85,17 +85,17 @@ public class CartService {
         Cart cart = cartRepository.findByProfileId(profileId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CART_NOT_FOUND)
                 ));
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_ITEM_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CART_ITEM_NOT_FOUND)
                 ));
         if (!item.getCartId().equals(cart.getCartId())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_ITEM_NOT_IN_CART)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.CART_ITEM_NOT_IN_CART)
             );
         }
         item.setQuantity(quantity);
@@ -110,17 +110,17 @@ public class CartService {
         Cart cart = cartRepository.findByProfileId(profileId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CART_NOT_FOUND)
                 ));
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_ITEM_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CART_ITEM_NOT_FOUND)
                 ));
         if (!item.getCartId().equals(cart.getCartId())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CART_ITEM_NOT_IN_CART)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.CART_ITEM_NOT_IN_CART)
             );
         }
         cartItemRepository.delete(item);

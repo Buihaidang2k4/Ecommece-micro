@@ -1,5 +1,7 @@
 package com.myshop.auth.service;
 
+import com.myshop.auth.exception.AuthErrorCode;
+
 import com.myshop.auth.dto.request.UpdateUserRolesRequest;
 import com.myshop.auth.dto.request.UserRegistrationRequest;
 import com.myshop.auth.dto.response.RoleResponse;
@@ -13,9 +15,9 @@ import com.myshop.auth.mapper.UserQueryMapper;
 import com.myshop.auth.repository.RoleRepository;
 import com.myshop.auth.repository.UserRepository;
 import com.myshop.auth.repository.UserRoleRepository;
-import com.myshop.commons.constants.RoleConstants;
+import com.myshop.auth.constant.RoleConstants;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.auth.constant.AuthMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import lombok.RequiredArgsConstructor;
@@ -46,15 +48,15 @@ public class UserService {
     public UserResponse register(UserRegistrationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException(
-                    ErrorCode.USER_EXISTED,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_EXISTED)
+                    AuthErrorCode.USER_EXISTED,
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.USER_EXISTED)
             );
         }
 
         Role userRole = roleRepository.findByRoleName(RoleConstants.USER)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ROLE_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_ROLE_NOT_FOUND)
                 ));
 
         User user = User.builder()
@@ -67,8 +69,8 @@ public class UserService {
             user = userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(
-                    ErrorCode.USER_EXISTED,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_EXISTED)
+                    AuthErrorCode.USER_EXISTED,
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.USER_EXISTED)
             );
         }
 
@@ -86,8 +88,8 @@ public class UserService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.USER_NOT_EXISTED,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                        AuthErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_NOT_FOUND)
                 ));
         return toResponse(user);
     }
@@ -102,39 +104,39 @@ public class UserService {
         if (reason == null || reason.isBlank()) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.LOCK_REASON_REQUIRED)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.LOCK_REASON_REQUIRED)
             );
         }
         String currentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         User current = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.USER_NOT_EXISTED,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                        AuthErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_NOT_FOUND)
                 ));
 
         if (userId.equals(current.getId())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.CANNOT_LOCK_YOURSELF)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.CANNOT_LOCK_YOURSELF)
             );
         }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.USER_NOT_EXISTED,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                        AuthErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_NOT_FOUND)
                 ));
 
         if (userQueryMapper.userHasRole(user.getId(), RoleConstants.ADMIN)) {
             throw new BusinessException(
                     ErrorCode.UNAUTHORIZED,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.CANNOT_LOCK_ADMIN)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.CANNOT_LOCK_ADMIN)
             );
         }
         if (!user.isEnabled()) {
             throw new BusinessException(
-                    ErrorCode.USER_ALREADY_LOCKED,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_LOCKED)
+                    AuthErrorCode.USER_ALREADY_LOCKED,
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.USER_ALREADY_LOCKED)
             );
         }
 
@@ -148,13 +150,13 @@ public class UserService {
     public void unlockUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.USER_NOT_EXISTED,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                        AuthErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_NOT_FOUND)
                 ));
         if (user.isEnabled()) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_ALREADY_UNLOCKED)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.USER_ALREADY_UNLOCKED)
             );
         }
         user.setEnabled(true);
@@ -167,15 +169,15 @@ public class UserService {
     public UserResponse updateRoles(Long userId, UpdateUserRolesRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.USER_NOT_EXISTED,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.USER_NOT_FOUND)
+                        AuthErrorCode.USER_NOT_EXISTED,
+                        MessageHandlerUtils.getMessage(AuthMessageKeys.USER_NOT_FOUND)
                 ));
 
         List<Role> roles = roleRepository.findAllById(request.getRoleIds());
         if (roles.size() != request.getRoleIds().size()) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.ROLE_NOT_FOUND)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.ROLE_NOT_FOUND)
             );
         }
 

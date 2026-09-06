@@ -1,12 +1,14 @@
 package com.myshop.auth.service;
 
+import com.myshop.auth.exception.AuthErrorCode;
+
 import com.myshop.auth.dto.request.ResetPasswordRequest;
 import com.myshop.auth.entity.PasswordResetOtp;
 import com.myshop.auth.entity.User;
 import com.myshop.auth.repository.PasswordResetOtpRepository;
 import com.myshop.auth.repository.UserRepository;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.auth.constant.AuthMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import jakarta.mail.MessagingException;
@@ -34,7 +36,7 @@ public class PasswordResetOtpService {
     @Transactional
     public void sendOtp(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(AuthErrorCode.USER_NOT_EXISTED));
 
         otpRepository.deleteAllByUserId(user.getId());
 
@@ -53,7 +55,7 @@ public class PasswordResetOtpService {
             log.error("Failed to send OTP email to {}", email, e);
             throw new BusinessException(
                     ErrorCode.INTERNAL_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Auth.FAILED_SEND_OTP)
+                    MessageHandlerUtils.getMessage(AuthMessageKeys.FAILED_SEND_OTP)
             );
         }
         log.info("OTP sent for user {}", user.getId());
@@ -62,13 +64,13 @@ public class PasswordResetOtpService {
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new BusinessException(AuthErrorCode.USER_NOT_EXISTED));
 
         PasswordResetOtp otpEntity = otpRepository.findByUserIdAndOtpCode(user.getId(), request.getOtp())
-                .orElseThrow(() -> new BusinessException(ErrorCode.OTP_INVALID));
+                .orElseThrow(() -> new BusinessException(AuthErrorCode.OTP_INVALID));
 
         if (otpEntity.isUsed() || otpEntity.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(ErrorCode.OTP_INVALID);
+            throw new BusinessException(AuthErrorCode.OTP_INVALID);
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));

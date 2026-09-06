@@ -11,11 +11,11 @@
 | `file-service` | 8094 | MinIO upload / presign / delete (JWT-secured for writes) |
 | `notification-service` | 8095 | MongoDB + Kafka consumer + email (JWT-secured) |
 | `payment-service` | 8096 | VNPay integration, outbox-based event publishing |
-| `commons/` | — | shared DTO, security, events, exception |
+| `commons/` | — | shared library (constants, dto, events, exception, security) |
 
 ## API prefix
 - YAML (gateway routes): `api.prefix` in `config-service/.../config-*.commons/application.yml`
-- Java (`@RequestMapping` / security): `ApiPrefixes.V1` in `commons-constants`
+- Java (`@RequestMapping` / security): `ApiPrefixes.V1` in `commons`
 
 ## Swagger UI
 Open per service (not via gateway):

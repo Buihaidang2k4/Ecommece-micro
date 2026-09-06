@@ -1,6 +1,6 @@
 package com.myshop.notification.kafka;
 
-import com.myshop.commons.constants.KafkaConstants;
+import com.myshop.notification.constant.NotificationKafkaConstants;
 import com.myshop.commons.events.UserRegisteredEvent;
 import com.myshop.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class UserRegisteredListener {
     private final NotificationService notificationService;
 
     @KafkaListener(topics = "${myshop.kafka.user-registered-topic:myshop.user.registered}",
-            groupId = KafkaConstants.CONSUMER_GROUP_NOTIFICATION)
+            groupId = NotificationKafkaConstants.CONSUMER_GROUP)
     public void onMessage(ConsumerRecord<String, UserRegisteredEvent> record,
                           @Header(value = "kafka_receivedMessageKey", required = false) String key) {
         UserRegisteredEvent event = record.value();

@@ -1,12 +1,12 @@
 package com.myshop.payment.service;
 
-import com.myshop.commons.constants.enums.CommonEnums.PaymentMethod;
-import com.myshop.commons.constants.enums.CommonEnums.PaymentStatus;
+import com.myshop.payment.constant.PaymentEnums.PaymentMethod;
+import com.myshop.payment.constant.PaymentEnums.PaymentStatus;
 import com.myshop.commons.events.PaymentExpiredEvent;
 import com.myshop.commons.events.PaymentFailedEvent;
 import com.myshop.commons.events.PaymentSucceededEvent;
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.payment.constant.PaymentMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.payment.config.VnpayProperties;
@@ -84,17 +84,17 @@ public class PaymentService {
         if (!Objects.equals(payment.getPaymentMethod(), PaymentMethod.VNPAY)) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.ONLY_VNPAY_REDIRECT));
+                    MessageHandlerUtils.getMessage(PaymentMessageKeys.ONLY_VNPAY_REDIRECT));
         }
         if (!Objects.equals(payment.getPaymentStatus(), PaymentStatus.INIT)) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.ALREADY_PROCESSED));
+                    MessageHandlerUtils.getMessage(PaymentMessageKeys.ALREADY_PROCESSED));
         }
         if (payment.getExpiredAt() != null && payment.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.EXPIRED));
+                    MessageHandlerUtils.getMessage(PaymentMessageKeys.EXPIRED));
         }
 
         long amountInSmallestUnit = payment.getAmount()
@@ -141,7 +141,7 @@ public class PaymentService {
                     queryParams.get(VnpayConstants.Param.TXN_REF));
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.INVALID_SIGNATURE));
+                    MessageHandlerUtils.getMessage(PaymentMessageKeys.INVALID_SIGNATURE));
         }
 
         String vnpTxnRef = queryParams.get(VnpayConstants.Param.TXN_REF);
@@ -150,7 +150,7 @@ public class PaymentService {
         Payment payment = paymentRepository.findByVnpTxnRef(vnpTxnRef)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(PaymentMessageKeys.NOT_FOUND)));
 
         if (Objects.equals(payment.getPaymentStatus(), PaymentStatus.PAID)) {
             return toResponse(payment);
@@ -199,7 +199,7 @@ public class PaymentService {
         if (!Objects.equals(payment.getPaymentMethod(), PaymentMethod.CASH)) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.ONLY_CASH_CONFIRM));
+                    MessageHandlerUtils.getMessage(PaymentMessageKeys.ONLY_CASH_CONFIRM));
         }
         if (Objects.equals(payment.getPaymentStatus(), PaymentStatus.PAID)) {
             return toResponse(payment);
@@ -232,7 +232,7 @@ public class PaymentService {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(PaymentMessageKeys.NOT_FOUND)));
         return toResponse(payment);
     }
 
@@ -270,7 +270,7 @@ public class PaymentService {
         return paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Payment.NOT_FOUND)));
+                        MessageHandlerUtils.getMessage(PaymentMessageKeys.NOT_FOUND)));
     }
 
     private PaymentResponse toResponse(Payment p) {

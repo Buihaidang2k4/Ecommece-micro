@@ -1,7 +1,7 @@
 package com.myshop.core.service.catalog;
 
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.ProductImageRequest;
@@ -41,7 +41,7 @@ public class ProductService {
         Product p = productRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PRODUCT_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
                 ));
         List<ProductImageResponse> images = productImageRepository.findByProductId(id).stream()
                 .map(this::toImageResponse)
@@ -53,7 +53,7 @@ public class ProductService {
         Product p = productRepository.findBySlug(slug)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PRODUCT_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
                 ));
         List<ProductImageResponse> images = productImageRepository.findByProductId(p.getProductId()).stream()
                 .map(this::toImageResponse)
@@ -93,7 +93,7 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PRODUCT_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
                 ));
         if (request.getCategoryId() != null) product.setCategoryId(request.getCategoryId());
         if (request.getProductName() != null) product.setProductName(request.getProductName());
@@ -121,7 +121,7 @@ public class ProductService {
         if (!productRepository.existsById(id)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PRODUCT_NOT_FOUND)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
             );
         }
         productRepository.deleteById(id);
@@ -132,7 +132,7 @@ public class ProductService {
         if (!productRepository.existsById(productId)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PRODUCT_NOT_FOUND)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.PRODUCT_NOT_FOUND)
             );
         }
         ProductImage image = ProductImage.builder()
@@ -152,7 +152,7 @@ public class ProductService {
         if (!productImageRepository.existsById(imageId)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.IMAGE_NOT_FOUND)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.IMAGE_NOT_FOUND)
             );
         }
         productImageRepository.deleteById(imageId);

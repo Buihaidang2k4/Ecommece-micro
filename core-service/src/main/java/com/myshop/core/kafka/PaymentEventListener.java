@@ -1,7 +1,7 @@
 package com.myshop.core.kafka;
 
-import com.myshop.commons.constants.KafkaConstants;
-import com.myshop.commons.constants.enums.CommonEnums.OrderStatus;
+import com.myshop.core.constant.CoreKafkaConstants;
+import com.myshop.core.constant.CoreEnums.OrderStatus;
 import com.myshop.commons.events.PaymentExpiredEvent;
 import com.myshop.commons.events.PaymentFailedEvent;
 import com.myshop.commons.events.PaymentSucceededEvent;
@@ -34,9 +34,9 @@ public class PaymentEventListener {
 
     @KafkaListener(
             topics = "${myshop.kafka.payment-succeeded-topic:myshop.payment.succeeded}",
-            groupId = KafkaConstants.CONSUMER_GROUP_CORE,
+            groupId = CoreKafkaConstants.CONSUMER_GROUP,
             properties = {
-                    KafkaConstants.JSON_TYPE_PAYMENT_SUCCEEDED
+                    CoreKafkaConstants.JSON_TYPE_PAYMENT_SUCCEEDED
             }
     )
     @Transactional
@@ -56,9 +56,9 @@ public class PaymentEventListener {
 
     @KafkaListener(
             topics = "${myshop.kafka.payment-failed-topic:myshop.payment.failed}",
-            groupId = KafkaConstants.CONSUMER_GROUP_CORE,
+            groupId = CoreKafkaConstants.CONSUMER_GROUP,
             properties = {
-                    KafkaConstants.JSON_TYPE_PAYMENT_FAILED
+                    CoreKafkaConstants.JSON_TYPE_PAYMENT_FAILED
             }
     )
     @Transactional
@@ -74,9 +74,9 @@ public class PaymentEventListener {
 
     @KafkaListener(
             topics = "${myshop.kafka.payment-expired-topic:myshop.payment.expired}",
-            groupId = KafkaConstants.CONSUMER_GROUP_CORE,
+            groupId = CoreKafkaConstants.CONSUMER_GROUP,
             properties = {
-                    KafkaConstants.JSON_TYPE_PAYMENT_EXPIRED
+                    CoreKafkaConstants.JSON_TYPE_PAYMENT_EXPIRED
             }
     )
     @Transactional

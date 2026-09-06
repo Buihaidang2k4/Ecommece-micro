@@ -1,0 +1,2 @@
+com.myshop.commons.exception.MessageConfig
+com.myshop.commons.security.FeignClientAutoConfiguration

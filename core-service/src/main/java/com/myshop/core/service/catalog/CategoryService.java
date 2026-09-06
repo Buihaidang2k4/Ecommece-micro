@@ -1,7 +1,7 @@
 package com.myshop.core.service.catalog;
 
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.CategoryRequest;
@@ -29,7 +29,7 @@ public class CategoryService {
         Category c = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CATEGORY_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CATEGORY_NOT_FOUND)
                 ));
         return toResponse(c);
     }
@@ -51,7 +51,7 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CATEGORY_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.CATEGORY_NOT_FOUND)
                 ));
         category.setCategoryName(request.getCategoryName());
         category.setDescription(request.getDescription());
@@ -65,7 +65,7 @@ public class CategoryService {
         if (!categoryRepository.existsById(id)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.CATEGORY_NOT_FOUND)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.CATEGORY_NOT_FOUND)
             );
         }
         categoryRepository.deleteById(id);

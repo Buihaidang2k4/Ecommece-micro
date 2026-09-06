@@ -1,7 +1,7 @@
 package com.myshop.core.service.customer;
 
 import com.myshop.commons.exception.BusinessException;
-import com.myshop.commons.exception.CommonMessageUtils;
+import com.myshop.core.constant.CoreMessageKeys;
 import com.myshop.commons.exception.ErrorCode;
 import com.myshop.commons.exception.MessageHandlerUtils;
 import com.myshop.core.dto.request.ProfileRequest;
@@ -22,7 +22,7 @@ public class ProfileService {
         UserProfile profile = userProfileRepository.findById(profileId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PROFILE_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PROFILE_NOT_FOUND)
                 ));
         return toResponse(profile);
     }
@@ -31,7 +31,7 @@ public class ProfileService {
         UserProfile profile = userProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PROFILE_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PROFILE_NOT_FOUND)
                 ));
         return toResponse(profile);
     }
@@ -45,7 +45,7 @@ public class ProfileService {
         if (userProfileRepository.existsByUserId(request.getUserId())) {
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR,
-                    MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PROFILE_ALREADY_EXISTS)
+                    MessageHandlerUtils.getMessage(CoreMessageKeys.PROFILE_ALREADY_EXISTS)
             );
         }
         UserProfile profile = UserProfile.builder()
@@ -64,7 +64,7 @@ public class ProfileService {
         UserProfile profile = userProfileRepository.findById(profileId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
-                        MessageHandlerUtils.getMessage(CommonMessageUtils.Core.PROFILE_NOT_FOUND)
+                        MessageHandlerUtils.getMessage(CoreMessageKeys.PROFILE_NOT_FOUND)
                 ));
         if (request.getUsername() != null) profile.setUsername(request.getUsername());
         if (request.getGender() != null) profile.setGender(request.getGender());
